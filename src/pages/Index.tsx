@@ -6,23 +6,25 @@ import ResponsesPage from "@/pages/ResponsesPage";
 import StatsPage from "@/pages/StatsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Icon from "@/components/ui/icon";
-
-const DEMO_USER = {
-  name: "Алексей Смирнов",
-  email: "a.smirnov@yandex.ru",
-  avatar: "",
-};
+import { useYandexAuth } from "@/hooks/useYandexAuth";
 
 export default function Index() {
   const [currentPage, setCurrentPage] = useState("forms");
-  const [user, setUser] = useState<typeof DEMO_USER | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const handleLogin = () => setShowLoginModal(true);
-  const handleLogout = () => setUser(null);
-  const handleYandexLogin = () => {
-    setUser(DEMO_USER);
-    setShowLoginModal(false);
+  const { user, loading, login, logout } = useYandexAuth();
+
+  const layoutUser = user
+    ? { name: user.name, email: user.email, avatar: user.avatar_url }
+    : null;
+
+  const handleLoginClick = () => setShowLoginModal(true);
+
+  const handleYandexLogin = async () => {
+    setLoginLoading(true);
+    await login(); // редиректит на oauth.yandex.ru
+    setLoginLoading(false);
   };
 
   const renderPage = () => {
@@ -36,19 +38,40 @@ export default function Index() {
       case "stats":
         return <StatsPage />;
       case "profile":
-        return <ProfilePage user={user} onLogin={handleLogin} onLogout={handleLogout} />;
+        return <ProfilePage user={layoutUser} onLogin={handleLoginClick} onLogout={logout} />;
       default:
         return <FormsPage onOpenBuilder={() => setCurrentPage("builder")} />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center neon-glow animate-float">
+            <Icon name="Zap" size={22} className="text-white" />
+          </div>
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary animate-pulse-slow"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <Layout
         currentPage={currentPage}
         onNavigate={setCurrentPage}
-        user={user}
-        onLogin={handleLogin}
+        user={layoutUser}
+        onLogin={handleLoginClick}
       >
         {renderPage()}
       </Layout>
@@ -74,19 +97,23 @@ export default function Index() {
 
             <button
               onClick={handleYandexLogin}
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-semibold text-white mb-4 hover:opacity-90 transition-all"
+              disabled={loginLoading}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-semibold text-white mb-4 hover:opacity-90 transition-all disabled:opacity-70"
               style={{
                 background: "linear-gradient(135deg, #fc3f1d 0%, #ff6534 100%)",
                 boxShadow: "0 0 24px rgba(252, 63, 29, 0.4)",
               }}
             >
-              <span className="text-2xl font-black">Я</span>
-              Войти через Яндекс
+              {loginLoading ? (
+                <Icon name="Loader2" size={20} className="animate-spin" />
+              ) : (
+                <span className="text-2xl font-black leading-none">Я</span>
+              )}
+              {loginLoading ? "Перенаправление..." : "Войти через Яндекс"}
             </button>
 
             <p className="text-xs text-muted-foreground">
-              Нажимая кнопку, вы соглашаетесь с{" "}
-              <span className="text-primary cursor-pointer hover:underline">условиями использования</span>
+              Мы используем официальный Яндекс OAuth. Ваши данные защищены.
             </p>
 
             <button
