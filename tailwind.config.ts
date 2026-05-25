@@ -69,8 +69,11 @@ export default {
           purple: '#7c3aed',
           cyan: '#06d6a0',
           pink: '#f72585',
-          orange: '#ff6b35',
+          orange: '#f4511e',
           blue: '#4cc9f0',
+          amber: '#ff8c00',
+          red: '#c0392b',
+          warm: '#ff6b35',
         }
       },
       borderRadius: {

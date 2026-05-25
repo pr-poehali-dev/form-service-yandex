@@ -46,16 +46,19 @@ export default function Index() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center neon-glow animate-float">
-            <Icon name="Zap" size={22} className="text-white" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(15,12%,5%)" }}>
+        <div className="flex flex-col items-center gap-5">
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl font-black animate-float"
+            style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 30px rgba(244,81,30,0.5)" }}
+          >
+            F
           </div>
           <div className="flex gap-1.5">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="w-2 h-2 rounded-full bg-primary animate-pulse-slow"
+                className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-slow"
                 style={{ animationDelay: `${i * 0.2}s` }}
               />
             ))}
@@ -83,11 +86,15 @@ export default function Index() {
           onClick={() => setShowLoginModal(false)}
         >
           <div
-            className="glass-strong rounded-3xl p-10 w-full max-w-md text-center animate-scale-in relative"
+            className="rounded-3xl p-10 w-full max-w-md text-center animate-scale-in relative"
+            style={{ background: "rgba(12,6,2,0.92)", backdropFilter: "blur(24px)", border: "1px solid rgba(244,81,30,0.2)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl gradient-primary flex items-center justify-center neon-glow animate-float">
-              <Icon name="Zap" size={28} className="text-white" />
+            <div
+              className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center text-white text-2xl font-black animate-float"
+              style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 32px rgba(244,81,30,0.5)" }}
+            >
+              F
             </div>
 
             <h2 className="text-2xl font-bold text-foreground mb-2">Добро пожаловать!</h2>

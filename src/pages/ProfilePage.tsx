@@ -55,17 +55,17 @@ export default function ProfilePage({ user, onLogin, onLogout }: ProfilePageProp
   }
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8 max-w-3xl px-8 md:px-14 py-8">
       {/* Header */}
       <h1 className="text-3xl font-bold text-foreground">Профиль</h1>
 
       {/* User card */}
       <div className="glass rounded-3xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
         <div className="relative">
-          <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center text-white text-3xl font-bold neon-glow">
+          <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center text-white text-3xl font-bold glow-orange">
             {user.name[0]}
           </div>
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-neon-cyan rounded-full flex items-center justify-center neon-glow-cyan">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-neon-orange rounded-full flex items-center justify-center glow-sm">
             <Icon name="Check" size={12} className="text-background font-bold" />
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function ProfilePage({ user, onLogin, onLogout }: ProfilePageProp
             {user.email}
           </div>
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs px-2.5 py-1 rounded-full bg-neon-purple/15 text-neon-purple border border-neon-purple/25 font-medium">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-neon-orange/15 text-neon-orange border border-neon-orange/25 font-medium">
               ✦ Про план
             </span>
             <span className="text-xs text-muted-foreground">до 01.06.2026</span>

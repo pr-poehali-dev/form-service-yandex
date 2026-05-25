@@ -147,7 +147,7 @@ export default function BuilderPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-88px)] flex gap-4 -m-6 p-6 overflow-hidden">
+    <div className="h-[calc(100vh-61px)] flex gap-4 px-8 md:px-14 py-6 overflow-hidden">
       {/* Left: field palette */}
       <div className="w-56 flex-shrink-0 flex flex-col gap-2 overflow-y-auto hidden lg:flex">
         <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-1 mb-1">

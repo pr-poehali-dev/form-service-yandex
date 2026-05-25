@@ -10,136 +10,130 @@ interface LayoutProps {
 }
 
 const navItems = [
-  { id: "forms", label: "Мои формы", icon: "LayoutDashboard" },
-  { id: "builder", label: "Конструктор", icon: "PenSquare" },
-  { id: "responses", label: "Ответы", icon: "MessageSquare" },
-  { id: "stats", label: "Статистика", icon: "BarChart3" },
-  { id: "profile", label: "Профиль", icon: "User" },
+  { id: "forms", label: "Активность" },
+  { id: "builder", label: "Конструктор" },
+  { id: "responses", label: "Ответы" },
+  { id: "stats", label: "Статистика" },
+  { id: "profile", label: "Прочее" },
 ];
 
 export default function Layout({ children, currentPage, onNavigate, user, onLogin }: LayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-background font-golos">
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col w-64 transition-transform duration-300 lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+    <div className="min-h-screen flex flex-col font-golos">
+      {/* Top navigation bar */}
+      <header
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
         style={{
-          background: "linear-gradient(180deg, hsl(220,20%,7%) 0%, hsl(220,20%,5%) 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(8,4,2,0.75)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          borderBottom: "1px solid rgba(244,81,30,0.12)",
         }}
       >
         {/* Logo */}
-        <div className="px-6 py-6 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center neon-glow flex-shrink-0">
-            <Icon name="Zap" size={18} className="text-white" />
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
+            style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 18px rgba(244,81,30,0.5)" }}
+          >
+            F
           </div>
-          <span className="text-xl font-bold text-white tracking-tight">FormFlow</span>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-2 space-y-1">
+        {/* Center nav — desktop */}
+        <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
             const active = currentPage === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => { onNavigate(item.id); setSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                onClick={() => onNavigate(item.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   active
-                    ? "bg-primary/15 text-primary border border-primary/25 neon-glow"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    ? "bg-foreground text-background font-semibold"
+                    : "text-foreground/60 hover:text-foreground hover:bg-white/8"
                 }`}
               >
-                <Icon name={item.icon} fallback="Circle" size={18} />
                 {item.label}
-                {active && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse-slow" />
-                )}
               </button>
             );
           })}
         </nav>
 
-        {/* User block */}
-        <div className="p-4 border-t border-white/7">
+        {/* Right: user + menu */}
+        <div className="flex items-center gap-3">
           {user ? (
-            <div className="flex items-center gap-3 px-2 py-2">
-              <div className="w-9 h-9 rounded-full gradient-primary flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+            <button
+              onClick={() => onNavigate("profile")}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-full glass hover:bg-white/8 transition"
+            >
+              <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                 {user.name[0]}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-foreground truncate">{user.name}</div>
-                <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+              <div className="hidden sm:block text-left">
+                <div className="text-xs font-semibold text-foreground leading-tight">{user.name.split(" ")[0]}</div>
+                <div className="text-[10px] text-foreground/50 leading-tight">{user.email.split("@")[0]}</div>
               </div>
-            </div>
+              <Icon name="ChevronDown" size={14} className="text-foreground/40" />
+            </button>
           ) : (
             <button
               onClick={onLogin}
-              className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-foreground gradient-primary hover:opacity-90 transition-opacity"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white gradient-primary glow-sm hover:opacity-90 transition"
             >
-              <Icon name="LogIn" size={16} />
-              Войти через Яндекс
+              Войти
             </button>
           )}
-        </div>
-      </aside>
 
-      {/* Overlay */}
-      {sidebarOpen && (
+          {/* Hamburger menu icon */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center glass text-foreground/60 hover:text-foreground transition"
+          >
+            <Icon name="Menu" size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile nav dropdown */}
+      {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+          className="fixed top-[61px] left-0 right-0 z-40 md:hidden animate-fade-in"
+          style={{ background: "rgba(8,4,2,0.95)", borderBottom: "1px solid rgba(244,81,30,0.12)" }}
+        >
+          {navItems.map((item) => {
+            const active = currentPage === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => { onNavigate(item.id); setMobileOpen(false); }}
+                className={`w-full text-left px-6 py-3.5 text-sm font-medium border-b border-white/5 transition ${
+                  active ? "text-primary" : "text-foreground/60 hover:text-foreground"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+          {!user && (
+            <div className="px-6 py-4">
+              <button
+                onClick={() => { onLogin(); setMobileOpen(false); }}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white gradient-primary"
+              >
+                Войти через Яндекс
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col lg:ml-64 min-h-screen">
-        {/* Topbar */}
-        <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-4"
-          style={{
-            background: "rgba(10,10,18,0.8)",
-            backdropFilter: "blur(16px)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-          }}>
-          <button
-            className="lg:hidden p-2 rounded-lg hover:bg-white/5 text-muted-foreground"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Icon name="Menu" size={20} />
-          </button>
-
-          <div className="hidden lg:flex items-center gap-2 text-muted-foreground text-sm">
-            <span className="text-primary font-semibold">
-              {navItems.find((n) => n.id === currentPage)?.label}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 ml-auto">
-            <button className="relative p-2 rounded-xl hover:bg-white/5 text-muted-foreground transition-colors">
-              <Icon name="Bell" size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-neon-pink rounded-full" />
-            </button>
-            {!user && (
-              <button
-                onClick={onLogin}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white gradient-primary hover:opacity-90 transition-opacity"
-              >
-                <Icon name="LogIn" size={15} />
-                Войти
-              </button>
-            )}
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 p-6 animate-fade-in">
-          {children}
-        </main>
-      </div>
+      {/* Page content */}
+      <main className="flex-1 pt-[61px]">
+        {children}
+      </main>
     </div>
   );
 }

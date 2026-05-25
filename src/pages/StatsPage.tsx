@@ -5,29 +5,29 @@ const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const MAX_VAL = Math.max(...WEEKLY);
 
 const TOP_FORMS = [
-  { name: "Обратная связь о продукте", responses: 247, conv: 13.5, color: "from-violet-500 to-purple-700" },
-  { name: "Опрос удовлетворённости", responses: 1204, conv: 21.2, color: "from-rose-500 to-pink-700" },
-  { name: "Регистрация на мероприятие", responses: 89, conv: 21.6, color: "from-cyan-500 to-blue-600" },
+  { name: "Обратная связь о продукте", responses: 247, conv: 13.5, color: "from-orange-600 to-red-700" },
+  { name: "Опрос удовлетворённости", responses: 1204, conv: 21.2, color: "from-red-700 to-rose-800" },
+  { name: "Регистрация на мероприятие", responses: 89, conv: 21.6, color: "from-amber-600 to-orange-700" },
   { name: "Заявка на консультацию", responses: 34, conv: 17.2, color: "from-orange-500 to-amber-600" },
 ];
 
 const SOURCES = [
-  { name: "Прямой переход", pct: 42, color: "bg-neon-purple" },
-  { name: "Поисковики", pct: 28, color: "bg-neon-cyan" },
-  { name: "Соцсети", pct: 18, color: "bg-neon-pink" },
-  { name: "Email", pct: 12, color: "bg-neon-orange" },
+  { name: "Прямой переход", pct: 42, color: "bg-neon-orange" },
+  { name: "Поисковики", pct: 28, color: "bg-neon-amber" },
+  { name: "Соцсети", pct: 18, color: "bg-neon-red" },
+  { name: "Email", pct: 12, color: "bg-neon-warm" },
 ];
 
 const KPI = [
-  { label: "Всего ответов", value: "1 574", delta: "+23%", icon: "MessageSquare", color: "text-neon-cyan", bg: "bg-neon-cyan/10" },
-  { label: "Конверсия", value: "18.4%", delta: "+3.1%", icon: "TrendingUp", color: "text-neon-purple", bg: "bg-neon-purple/10" },
-  { label: "Среднее время", value: "2:34", delta: "-12с", icon: "Clock", color: "text-neon-orange", bg: "bg-neon-orange/10" },
-  { label: "Завершили", value: "91.2%", delta: "+1.8%", icon: "CheckCircle2", color: "text-neon-cyan", bg: "bg-neon-cyan/10" },
+  { label: "Всего ответов", value: "1 574", delta: "+23%", icon: "MessageSquare", color: "text-neon-orange", bg: "bg-neon-orange/10" },
+  { label: "Конверсия", value: "18.4%", delta: "+3.1%", icon: "TrendingUp", color: "text-neon-amber", bg: "bg-neon-amber/10" },
+  { label: "Среднее время", value: "2:34", delta: "-12с", icon: "Clock", color: "text-neon-warm", bg: "bg-neon-warm/10" },
+  { label: "Завершили", value: "91.2%", delta: "+1.8%", icon: "CheckCircle2", color: "text-neon-orange", bg: "bg-neon-orange/10" },
 ];
 
 export default function StatsPage() {
   return (
-    <div className="space-y-8 max-w-6xl">
+    <div className="space-y-8 max-w-6xl px-8 md:px-14 py-8">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">Статистика</h1>
@@ -46,7 +46,7 @@ export default function StatsPage() {
               <div className={`w-9 h-9 rounded-xl ${k.bg} flex items-center justify-center`}>
                 <Icon name={k.icon} fallback="Circle" size={18} className={k.color} />
               </div>
-              <span className="text-xs font-semibold text-neon-cyan bg-neon-cyan/10 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-semibold text-neon-orange bg-neon-orange/10 px-2 py-0.5 rounded-full">
                 {k.delta}
               </span>
             </div>
@@ -80,7 +80,7 @@ export default function StatsPage() {
                   <div className="w-full relative rounded-t-lg overflow-hidden" style={{ height: `${h}%`, minHeight: 4 }}>
                     <div
                       className={`w-full h-full rounded-t-lg ${
-                        isToday ? "gradient-primary neon-glow" : "bg-white/10 hover:bg-white/15"
+                        isToday ? "gradient-primary glow-orange" : "bg-white/10 hover:bg-white/15"
                       } transition-all cursor-pointer`}
                     />
                   </div>
@@ -103,8 +103,8 @@ export default function StatsPage() {
             <div
               className="w-28 h-28 rounded-full relative"
               style={{
-                background: "conic-gradient(#7c3aed 0% 42%, #06d6a0 42% 70%, #f72585 70% 88%, #ff6b35 88% 100%)",
-                boxShadow: "0 0 30px rgba(124,58,237,0.25)",
+                background: "conic-gradient(#f4511e 0% 42%, #ff8c00 42% 70%, #c0392b 70% 88%, #ff6b35 88% 100%)",
+                boxShadow: "0 0 30px rgba(244,81,30,0.3)",
               }}
             >
               <div className="absolute inset-4 rounded-full bg-background flex items-center justify-center">

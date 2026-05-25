@@ -2,215 +2,277 @@ import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const DEMO_FORMS = [
-  {
-    id: 1,
-    title: "Обратная связь о продукте",
-    responses: 247,
-    views: 1830,
-    status: "active",
-    updatedAt: "Сегодня, 14:32",
-    color: "from-violet-500 to-purple-700",
-    emoji: "💬",
-  },
-  {
-    id: 2,
-    title: "Регистрация на мероприятие",
-    responses: 89,
-    views: 412,
-    status: "active",
-    updatedAt: "Вчера, 10:15",
-    color: "from-cyan-500 to-blue-600",
-    emoji: "🎉",
-  },
-  {
-    id: 3,
-    title: "Опрос удовлетворённости",
-    responses: 1204,
-    views: 5670,
-    status: "paused",
-    updatedAt: "3 дня назад",
-    color: "from-rose-500 to-pink-700",
-    emoji: "⭐",
-  },
-  {
-    id: 4,
-    title: "Заявка на консультацию",
-    responses: 34,
-    views: 198,
-    status: "active",
-    updatedAt: "Неделю назад",
-    color: "from-orange-500 to-amber-600",
-    emoji: "📋",
-  },
-  {
-    id: 5,
-    title: "Анкета нового сотрудника",
-    responses: 0,
-    views: 0,
-    status: "draft",
-    updatedAt: "Сегодня, 09:00",
-    color: "from-green-500 to-emerald-700",
-    emoji: "👤",
-  },
+  { id: 1, title: "Обратная связь", responses: 247, views: 1830, status: "active", emoji: "💬", color: "#f4511e" },
+  { id: 2, title: "Регистрация на событие", responses: 89, views: 412, status: "active", emoji: "🎉", color: "#ff8c00" },
+  { id: 3, title: "Опрос клиентов", responses: 1204, views: 5670, status: "paused", emoji: "⭐", color: "#c0392b" },
+  { id: 4, title: "Заявка на консультацию", responses: 34, views: 198, status: "active", emoji: "📋", color: "#e8520a" },
 ];
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  active: { label: "Активна", color: "text-neon-cyan bg-neon-cyan/10 border-neon-cyan/25" },
-  paused: { label: "Пауза", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/25" },
-  draft: { label: "Черновик", color: "text-muted-foreground bg-white/5 border-white/10" },
-};
+const TIMELINE = [
+  { year: "2022", label: "Web3", icon: "Activity", active: false },
+  { year: "2023", label: "DeFi", icon: "Anchor", active: false },
+  { year: "2024", label: "AI", icon: "Zap", active: true },
+  { year: "2025", label: "Данные", icon: "TrendingUp", active: false },
+  { year: "2026", label: "Авто", icon: "Settings", active: false },
+  { year: "2027", label: "SaaS", icon: "Monitor", active: false },
+];
+
+const NAV_TABS = ["Активность", "Аналитика", "Ответы", "Партнёры", "Прочее"];
 
 interface FormsPageProps {
   onOpenBuilder: () => void;
 }
 
 export default function FormsPage({ onOpenBuilder }: FormsPageProps) {
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-
-  const filtered = DEMO_FORMS.filter((f) => {
-    const matchSearch = f.title.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "all" || f.status === filter;
-    return matchSearch && matchFilter;
-  });
-
-  const stats = [
-    { label: "Всего форм", value: "5", icon: "FileText", color: "text-neon-purple", bg: "bg-neon-purple/10" },
-    { label: "Активных", value: "3", icon: "Zap", color: "text-neon-cyan", bg: "bg-neon-cyan/10" },
-    { label: "Ответов", value: "1 574", icon: "MessageSquare", color: "text-neon-pink", bg: "bg-neon-pink/10" },
-    { label: "Просмотров", value: "8 110", icon: "Eye", color: "text-neon-orange", bg: "bg-neon-orange/10" },
-  ];
+  const [activeTab, setActiveTab] = useState("Активность");
 
   return (
-    <div className="space-y-8 max-w-6xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Мои формы</h1>
-          <p className="text-muted-foreground mt-1">Управляй своими формами и отслеживай ответы</p>
-        </div>
-        <button
-          onClick={onOpenBuilder}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold text-white gradient-primary hover:opacity-90 transition-all neon-glow hover:scale-105 active:scale-100"
-          style={{ transition: "all 0.2s ease" }}
-        >
-          <Icon name="Plus" size={18} />
-          Создать форму
-        </button>
-      </div>
+    <div className="min-h-[calc(100vh-61px)] flex flex-col">
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s, i) => (
+      {/* ═══ HERO SECTION ═══ */}
+      <div className="relative overflow-hidden" style={{ minHeight: "62vh" }}>
+
+        {/* Background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/1da569e8-93a8-4db1-a5db-0db7cf2a0e49.jpeg)`,
+          }}
+        />
+
+        {/* Gradient overlays — left fade + bottom fade */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(10,4,1,0.82) 0%, rgba(10,4,1,0.35) 50%, rgba(80,20,5,0.1) 100%)," +
+              "linear-gradient(to top, rgba(10,4,1,1) 0%, rgba(10,4,1,0.6) 28%, transparent 55%)",
+          }}
+        />
+
+        {/* Ambient orange light */}
+        <div
+          className="absolute right-0 top-0 w-[55%] h-full pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse at 70% 40%, rgba(200,60,10,0.22) 0%, transparent 65%)",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 h-full flex flex-col justify-between px-8 md:px-14 pt-12 pb-8" style={{ minHeight: "62vh" }}>
+
+          {/* Top left — total */}
+          <div className="animate-slide-up">
+            <p className="text-sm font-medium text-white/50 mb-1 tracking-wide">Всего ответов</p>
+            <h1
+              className="text-6xl md:text-7xl font-black text-white leading-none glow-text"
+              style={{ fontFamily: "'Golos Text', sans-serif" }}
+            >
+              1 574
+            </h1>
+          </div>
+
+          {/* Top right — floating stat card */}
           <div
-            key={i}
-            className="glass rounded-2xl p-5 card-hover"
-            style={{ animationDelay: `${i * 0.08}s` }}
+            className="absolute top-10 right-8 md:right-14 animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center`}>
-                <Icon name={s.icon} fallback="Circle" size={18} className={s.color} />
+            <div
+              className="rounded-2xl p-4 w-44"
+              style={{
+                background: "rgba(12,6,2,0.75)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(244,81,30,0.25)",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-white/50 font-medium">Форм создано</span>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "#f4511e" }}>
+                  <Icon name="ArrowRight" size={12} className="text-white" />
+                </div>
+              </div>
+              <p className="text-2xl font-black text-white mb-3">5</p>
+              {/* Mini bar chart */}
+              <div className="flex items-end gap-1 h-8">
+                {[3, 5, 4, 7, 6, 8, 7].map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm transition-all"
+                    style={{
+                      height: `${(h / 8) * 100}%`,
+                      background: i === 5 ? "#f4511e" : "rgba(255,255,255,0.15)",
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="mt-2 flex items-center gap-1">
+                <span className="text-[10px] font-bold text-primary bg-primary/20 px-1.5 py-0.5 rounded">+23%</span>
               </div>
             </div>
-            <div className="text-2xl font-bold text-foreground">{s.value}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
           </div>
-        ))}
+        </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Icon name="Search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Поиск форм..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl glass text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 transition"
-          />
-        </div>
-        <div className="flex gap-2">
-          {["all", "active", "paused", "draft"].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                filter === f
-                  ? "bg-primary/20 text-primary border border-primary/30"
-                  : "glass text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {{ all: "Все", active: "Активные", paused: "Пауза", draft: "Черновики" }[f]}
+      {/* ═══ TABS + BOTTOM PANEL ═══ */}
+      <div
+        className="flex-1"
+        style={{ background: "linear-gradient(180deg, rgba(10,4,1,1) 0%, hsl(15,12%,5%) 100%)" }}
+      >
+        {/* Tab row */}
+        <div className="flex items-center justify-between px-8 md:px-14 pt-6 pb-4 border-b border-white/6">
+          <div className="flex items-center gap-2 flex-wrap">
+            {NAV_TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  activeTab === tab
+                    ? "bg-foreground text-background font-semibold"
+                    : "text-foreground/50 hover:text-foreground border border-white/10 hover:border-white/20"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className="w-9 h-9 rounded-xl flex items-center justify-center text-foreground/40 hover:text-foreground glass transition">
+              <Icon name="Cloud" size={16} />
             </button>
-          ))}
+            <button className="w-9 h-9 rounded-xl flex items-center justify-center text-foreground/40 hover:text-foreground glass transition">
+              <Icon name="Settings" size={16} />
+            </button>
+            <button
+              onClick={onOpenBuilder}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white gradient-primary glow-sm transition hover:opacity-90"
+            >
+              <Icon name="Plus" size={16} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Forms grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {filtered.map((form, i) => (
-          <div
-            key={form.id}
-            className="glass rounded-2xl overflow-hidden card-hover animate-fade-in"
-            style={{ animationDelay: `${i * 0.07}s` }}
-          >
-            {/* Card top gradient */}
-            <div className={`h-2 bg-gradient-to-r ${form.color}`} />
+        {/* Timeline */}
+        <div className="px-8 md:px-14 pt-8 pb-6">
+          <p className="text-sm text-foreground/40 mb-6 italic" style={{ fontFamily: "'Golos Text', sans-serif" }}>
+            Our Progress
+          </p>
 
-            <div className="p-5">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{form.emoji}</span>
-                  <div>
-                    <div className="font-semibold text-foreground leading-tight">{form.title}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{form.updatedAt}</div>
+          <div className="relative">
+            {/* Connector line */}
+            <div
+              className="absolute top-[22px] left-[22px] right-[22px] h-px"
+              style={{
+                background: "linear-gradient(to right, rgba(244,81,30,0.6) 0%, rgba(244,81,30,0.15) 60%, rgba(255,255,255,0.08) 100%)",
+              }}
+            />
+            {/* Dashed continuation */}
+            <div
+              className="absolute top-[22px] left-[40%] right-[22px] h-px"
+              style={{
+                background: "repeating-linear-gradient(to right, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.12) 6px, transparent 6px, transparent 14px)",
+              }}
+            />
+
+            <div className="relative flex items-start justify-between">
+              {TIMELINE.map((item, i) => (
+                <div key={item.year} className="flex flex-col items-center gap-2 flex-1 animate-fade-in" style={{ animationDelay: `${i * 0.08}s` }}>
+                  {/* Active badge */}
+                  {item.active && (
+                    <div
+                      className="absolute -top-5 text-[10px] font-semibold text-white px-2 py-0.5 rounded-full"
+                      style={{ background: "#f4511e", boxShadow: "0 0 10px rgba(244,81,30,0.7)" }}
+                    >
+                      сейчас
+                    </div>
+                  )}
+
+                  {/* Node circle */}
+                  <div
+                    className={`w-11 h-11 rounded-full flex items-center justify-center z-10 transition-all ${
+                      item.active
+                        ? "glow-orange"
+                        : ""
+                    }`}
+                    style={{
+                      background: item.active
+                        ? "linear-gradient(135deg, #f4511e, #ff8c00)"
+                        : i < 2
+                        ? "rgba(255,255,255,0.12)"
+                        : "rgba(20,10,5,0.9)",
+                      border: item.active
+                        ? "none"
+                        : i < 2
+                        ? "1px solid rgba(255,255,255,0.2)"
+                        : "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <Icon name={item.icon} fallback="Circle" size={18} className={item.active ? "text-white" : i < 2 ? "text-white" : "text-foreground/40"} />
+                  </div>
+
+                  <div className="text-center">
+                    <div className={`text-xs font-semibold ${item.active ? "text-foreground" : "text-foreground/50"}`}>
+                      {item.label}
+                    </div>
+                    <div className={`text-[10px] mt-0.5 ${item.active ? "text-primary" : "text-foreground/30"}`}>
+                      {item.year}
+                    </div>
                   </div>
                 </div>
-                <span
-                  className={`text-xs px-2.5 py-1 rounded-full border font-medium ${STATUS_MAP[form.status].color}`}
-                >
-                  {STATUS_MAP[form.status].label}
-                </span>
-              </div>
-
-              <div className="flex gap-4 mb-5">
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Icon name="MessageSquare" size={14} className="text-neon-cyan" />
-                  <span className="font-medium text-foreground">{form.responses}</span> ответов
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Icon name="Eye" size={14} className="text-neon-purple" />
-                  <span className="font-medium text-foreground">{form.views}</span> просмотров
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 transition border border-primary/20">
-                  <Icon name="Pencil" size={13} />
-                  Редактировать
-                </button>
-                <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground glass transition">
-                  <Icon name="Share2" size={13} />
-                </button>
-                <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground glass transition">
-                  <Icon name="MoreHorizontal" size={13} />
-                </button>
-              </div>
+              ))}
             </div>
           </div>
-        ))}
+        </div>
 
-        {/* New form card */}
-        <button
-          onClick={onOpenBuilder}
-          className="glass rounded-2xl p-5 border-2 border-dashed border-white/10 hover:border-primary/40 flex flex-col items-center justify-center gap-3 min-h-[200px] text-muted-foreground hover:text-primary transition-all group"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-white/5 group-hover:bg-primary/15 flex items-center justify-center transition-all">
-            <Icon name="Plus" size={24} className="transition-transform group-hover:scale-110" />
+        {/* Forms grid */}
+        <div className="px-8 md:px-14 pb-10">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-foreground/70">Мои формы</h2>
+            <button className="text-xs text-primary hover:text-primary/80 transition">Все →</button>
           </div>
-          <span className="text-sm font-medium">Создать новую форму</span>
-        </button>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {DEMO_FORMS.map((form, i) => (
+              <div
+                key={form.id}
+                className="glass rounded-2xl p-5 card-hover cursor-pointer animate-fade-in group"
+                style={{ animationDelay: `${i * 0.07}s` }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-4"
+                  style={{ background: `${form.color}22`, border: `1px solid ${form.color}33` }}
+                >
+                  {form.emoji}
+                </div>
+                <p className="text-sm font-semibold text-foreground leading-snug mb-3">{form.title}</p>
+                <div className="flex items-center justify-between text-xs text-foreground/40">
+                  <span>{form.responses} ответов</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full border ${
+                      form.status === "active"
+                        ? "text-primary border-primary/25 bg-primary/10"
+                        : "text-foreground/30 border-white/10"
+                    }`}
+                  >
+                    {form.status === "active" ? "Активна" : "Пауза"}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* Add new */}
+            <button
+              onClick={onOpenBuilder}
+              className="glass rounded-2xl p-5 flex flex-col items-center justify-center gap-2 min-h-[140px] border-dashed border-white/10 hover:border-primary/30 text-foreground/30 hover:text-primary transition-all group"
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center glass group-hover:bg-primary/15 transition">
+                <Icon name="Plus" size={20} />
+              </div>
+              <span className="text-xs font-medium">Новая форма</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
