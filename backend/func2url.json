@@ -1,3 +1,5 @@
 {
+  "responses-api": "https://functions.poehali.dev/0c74e3f4-01ab-421c-9583-ab61ddd23057",
+  "forms-api": "https://functions.poehali.dev/64ba70e7-2376-416b-9dff-265e6a77cd03",
   "yandex-auth": "https://functions.poehali.dev/857f34d4-2daa-4be3-ad3f-52d27fe7d9b1"
 }

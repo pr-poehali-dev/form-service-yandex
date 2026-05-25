@@ -10,130 +10,176 @@ interface LayoutProps {
 }
 
 const navItems = [
-  { id: "forms", label: "Активность" },
-  { id: "builder", label: "Конструктор" },
-  { id: "responses", label: "Ответы" },
-  { id: "stats", label: "Статистика" },
-  { id: "profile", label: "Прочее" },
+  { id: "forms", label: "Мои формы", icon: "LayoutDashboard" },
+  { id: "builder", label: "Конструктор", icon: "PenSquare" },
+  { id: "responses", label: "Ответы", icon: "MessageSquare" },
+  { id: "stats", label: "Статистика", icon: "BarChart3" },
 ];
 
 export default function Layout({ children, currentPage, onNavigate, user, onLogin }: LayoutProps) {
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div className={`flex items-center gap-3 px-5 py-5 ${collapsed ? "justify-center" : ""}`}>
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0"
+          style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 14px rgba(244,81,30,0.45)" }}
+        >
+          F
+        </div>
+        {!collapsed && (
+          <span className="text-lg font-bold text-foreground tracking-tight">FormFlow</span>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-2 space-y-1">
+        {navItems.map((item) => {
+          const active = currentPage === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => { onNavigate(item.id); setMobileOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                collapsed ? "justify-center" : ""
+              } ${
+                active
+                  ? "text-white"
+                  : "text-foreground/50 hover:text-foreground hover:bg-white/6"
+              }`}
+              style={active ? {
+                background: "linear-gradient(135deg, rgba(244,81,30,0.25), rgba(255,140,0,0.15))",
+                border: "1px solid rgba(244,81,30,0.3)",
+              } : {}}
+              title={collapsed ? item.label : undefined}
+            >
+              <Icon name={item.icon} fallback="Circle" size={18} className={active ? "text-primary" : ""} />
+              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && active && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse-slow" />
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Bottom: profile + collapse */}
+      <div className="p-3 border-t border-white/6 space-y-2">
+        <button
+          onClick={() => { onNavigate("profile"); setMobileOpen(false); }}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-foreground/50 hover:text-foreground hover:bg-white/6 ${collapsed ? "justify-center" : ""} ${currentPage === "profile" ? "text-white" : ""}`}
+          style={currentPage === "profile" ? {
+            background: "linear-gradient(135deg, rgba(244,81,30,0.25), rgba(255,140,0,0.15))",
+            border: "1px solid rgba(244,81,30,0.3)",
+          } : {}}
+        >
+          <Icon name="User" fallback="Circle" size={18} className={currentPage === "profile" ? "text-primary" : ""} />
+          {!collapsed && <span>Профиль</span>}
+        </button>
+
+        {user ? (
+          <div className={`flex items-center gap-2.5 px-3 py-2 ${collapsed ? "justify-center" : ""}`}>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 gradient-primary">
+              {user.name[0]}
+            </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold text-foreground truncate">{user.name.split(" ")[0]}</div>
+                <div className="text-[10px] text-foreground/40 truncate">{user.email}</div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={onLogin}
+            className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-white gradient-primary hover:opacity-90 transition ${collapsed ? "justify-center" : ""}`}
+          >
+            <Icon name="LogIn" size={16} />
+            {!collapsed && "Войти"}
+          </button>
+        )}
+
+        {/* Collapse toggle — desktop only */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`hidden lg:flex w-full items-center gap-2 px-3 py-2 rounded-xl text-xs text-foreground/30 hover:text-foreground/60 hover:bg-white/4 transition ${collapsed ? "justify-center" : ""}`}
+        >
+          <Icon name={collapsed ? "ChevronRight" : "ChevronLeft"} size={14} />
+          {!collapsed && "Свернуть"}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex flex-col font-golos">
-      {/* Top navigation bar */}
-      <header
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3"
+    <div className="min-h-screen flex font-golos">
+      {/* Sidebar — desktop */}
+      <aside
+        className={`hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 transition-all duration-200 ${collapsed ? "w-[64px]" : "w-56"}`}
         style={{
-          background: "rgba(8,4,2,0.75)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderBottom: "1px solid rgba(244,81,30,0.12)",
+          background: "rgba(8,4,2,0.85)",
+          backdropFilter: "blur(20px)",
+          borderRight: "1px solid rgba(255,255,255,0.07)",
         }}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
+        <SidebarContent />
+      </aside>
+
+      {/* Sidebar — mobile overlay */}
+      {mobileOpen && (
+        <>
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg"
-            style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 18px rgba(244,81,30,0.5)" }}
+            className="fixed inset-0 z-40 bg-black/70 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside
+            className="fixed inset-y-0 left-0 z-50 w-56 flex flex-col lg:hidden animate-slide-up"
+            style={{
+              background: "rgba(8,4,2,0.97)",
+              borderRight: "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
+            <SidebarContent />
+          </aside>
+        </>
+      )}
+
+      {/* Main content */}
+      <div className={`flex-1 flex flex-col transition-all duration-200 ${collapsed ? "lg:ml-[64px]" : "lg:ml-56"}`}>
+        {/* Mobile topbar */}
+        <header
+          className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3"
+          style={{
+            background: "rgba(8,4,2,0.85)",
+            backdropFilter: "blur(16px)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <button onClick={() => setMobileOpen(true)} className="p-2 rounded-xl text-foreground/60 hover:text-foreground">
+            <Icon name="Menu" size={20} />
+          </button>
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black"
+            style={{ background: "rgba(244,81,30,0.9)" }}
           >
             F
           </div>
-        </div>
-
-        {/* Center nav — desktop */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => {
-            const active = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  active
-                    ? "bg-foreground text-background font-semibold"
-                    : "text-foreground/60 hover:text-foreground hover:bg-white/8"
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Right: user + menu */}
-        <div className="flex items-center gap-3">
           {user ? (
-            <button
-              onClick={() => onNavigate("profile")}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-full glass hover:bg-white/8 transition"
-            >
-              <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {user.name[0]}
-              </div>
-              <div className="hidden sm:block text-left">
-                <div className="text-xs font-semibold text-foreground leading-tight">{user.name.split(" ")[0]}</div>
-                <div className="text-[10px] text-foreground/50 leading-tight">{user.email.split("@")[0]}</div>
-              </div>
-              <Icon name="ChevronDown" size={14} className="text-foreground/40" />
-            </button>
-          ) : (
-            <button
-              onClick={onLogin}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white gradient-primary glow-sm hover:opacity-90 transition"
-            >
-              Войти
-            </button>
-          )}
-
-          {/* Hamburger menu icon */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center glass text-foreground/60 hover:text-foreground transition"
-          >
-            <Icon name="Menu" size={18} />
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile nav dropdown */}
-      {mobileOpen && (
-        <div
-          className="fixed top-[61px] left-0 right-0 z-40 md:hidden animate-fade-in"
-          style={{ background: "rgba(8,4,2,0.95)", borderBottom: "1px solid rgba(244,81,30,0.12)" }}
-        >
-          {navItems.map((item) => {
-            const active = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => { onNavigate(item.id); setMobileOpen(false); }}
-                className={`w-full text-left px-6 py-3.5 text-sm font-medium border-b border-white/5 transition ${
-                  active ? "text-primary" : "text-foreground/60 hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-          {!user && (
-            <div className="px-6 py-4">
-              <button
-                onClick={() => { onLogin(); setMobileOpen(false); }}
-                className="w-full py-3 rounded-xl text-sm font-semibold text-white gradient-primary"
-              >
-                Войти через Яндекс
-              </button>
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
+              {user.name[0]}
             </div>
+          ) : (
+            <button onClick={onLogin} className="text-sm font-semibold text-primary">Войти</button>
           )}
-        </div>
-      )}
+        </header>
 
-      {/* Page content */}
-      <main className="flex-1 pt-[61px]">
-        {children}
-      </main>
+        <main className="flex-1 min-h-0">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
