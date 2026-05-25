@@ -169,11 +169,13 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
       <div className="w-full max-w-lg relative z-10">
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8 justify-center">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm"
-            style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 14px rgba(244,81,30,0.45)" }}>
-            F
-          </div>
-          <span className="text-sm font-semibold text-foreground/50">FormFlow</span>
+          <img
+            src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/398999e0-d058-4e86-ae0c-96d1a6895ef3.png"
+            alt="Формус"
+            className="w-8 h-8 rounded-xl"
+            style={{ boxShadow: "0 0 14px rgba(244,81,30,0.4)" }}
+          />
+          <span className="text-sm font-semibold text-foreground/50">Формус</span>
         </div>
 
         {submitted ? (

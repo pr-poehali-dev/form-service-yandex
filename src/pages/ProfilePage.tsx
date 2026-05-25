@@ -36,7 +36,7 @@ export default function ProfilePage({ user, onLogin, onLogout }: ProfilePageProp
         <div>
           <h2 className="text-2xl font-bold text-foreground">Войдите в аккаунт</h2>
           <p className="text-muted-foreground mt-2 max-w-sm">
-            Войдите через Яндекс, чтобы получить доступ ко всем функциям FormFlow
+            Войдите через Яндекс, чтобы получить доступ ко всем функциям Формус
           </p>
         </div>
         <button

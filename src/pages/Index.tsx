@@ -81,10 +81,12 @@ export default function Index() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(15,12%,5%)" }}>
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl font-black animate-float"
-            style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 28px rgba(244,81,30,0.5)" }}>
-            F
-          </div>
+          <img
+            src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/398999e0-d058-4e86-ae0c-96d1a6895ef3.png"
+            alt="Формус"
+            className="w-12 h-12 rounded-2xl animate-float"
+            style={{ boxShadow: "0 0 28px rgba(244,81,30,0.5)" }}
+          />
           <div className="flex gap-1.5">
             {[0,1,2].map(i => (
               <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse-slow"
@@ -113,11 +115,13 @@ export default function Index() {
             style={{ background: "rgba(12,6,2,0.95)", backdropFilter: "blur(24px)", border: "1px solid rgba(244,81,30,0.2)" }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center text-white text-2xl font-black animate-float"
-              style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 32px rgba(244,81,30,0.5)" }}>
-              F
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Добро пожаловать!</h2>
+            <img
+              src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/398999e0-d058-4e86-ae0c-96d1a6895ef3.png"
+              alt="Формус"
+              className="w-16 h-16 mx-auto mb-6 rounded-2xl animate-float"
+              style={{ boxShadow: "0 0 32px rgba(244,81,30,0.5)" }}
+            />
+            <h2 className="text-2xl font-bold text-foreground mb-2">Добро пожаловать в Формус!</h2>
             <p className="text-muted-foreground text-sm mb-8">
               Войди через Яндекс, чтобы создавать формы и собирать ответы
             </p>

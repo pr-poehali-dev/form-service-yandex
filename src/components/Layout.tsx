@@ -24,14 +24,14 @@ export default function Layout({ children, currentPage, onNavigate, user, onLogi
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className={`flex items-center gap-3 px-5 py-5 ${collapsed ? "justify-center" : ""}`}>
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0"
-          style={{ background: "rgba(244,81,30,0.9)", boxShadow: "0 0 14px rgba(244,81,30,0.45)" }}
-        >
-          F
-        </div>
+        <img
+          src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/398999e0-d058-4e86-ae0c-96d1a6895ef3.png"
+          alt="Формус"
+          className="w-9 h-9 rounded-xl flex-shrink-0"
+          style={{ boxShadow: "0 0 14px rgba(244,81,30,0.4)" }}
+        />
         {!collapsed && (
-          <span className="text-lg font-bold text-foreground tracking-tight">FormFlow</span>
+          <span className="text-lg font-bold text-foreground tracking-tight">Формус</span>
         )}
       </div>
 
@@ -161,12 +161,11 @@ export default function Layout({ children, currentPage, onNavigate, user, onLogi
           <button onClick={() => setMobileOpen(true)} className="p-2 rounded-xl text-foreground/60 hover:text-foreground">
             <Icon name="Menu" size={20} />
           </button>
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-black"
-            style={{ background: "rgba(244,81,30,0.9)" }}
-          >
-            F
-          </div>
+          <img
+            src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/398999e0-d058-4e86-ae0c-96d1a6895ef3.png"
+            alt="Формус"
+            className="w-8 h-8 rounded-lg"
+          />
           {user ? (
             <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
               {user.name[0]}
