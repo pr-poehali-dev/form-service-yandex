@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 
 interface LayoutProps {
@@ -110,6 +111,14 @@ export default function Layout({ children, currentPage, onNavigate, user, onLogi
           <Icon name={collapsed ? "ChevronRight" : "ChevronLeft"} size={14} />
           {!collapsed && "Свернуть"}
         </button>
+
+        {/* Legal links */}
+        {!collapsed && (
+          <div className="px-3 pt-1 pb-1 flex gap-3">
+            <Link to="/privacy" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Конфиденциальность</Link>
+            <Link to="/terms" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Соглашение</Link>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -178,6 +187,13 @@ export default function Layout({ children, currentPage, onNavigate, user, onLogi
         <main className="flex-1 min-h-0">
           {children}
         </main>
+
+        {/* Footer — mobile only */}
+        <footer className="lg:hidden flex items-center justify-center gap-4 py-3 border-t border-white/5">
+          <Link to="/privacy" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Конфиденциальность</Link>
+          <span className="text-foreground/15 text-[10px]">·</span>
+          <Link to="/terms" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Соглашение</Link>
+        </footer>
       </div>
     </div>
   );
