@@ -166,9 +166,12 @@ def handler(event: dict, context) -> dict:
         if not code:
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "code required"})}
 
+        print(f"[AUTH] code={code[:10]}... redirect_uri={redirect_uri}")
         token_data = exchange_code(code, redirect_uri)
+        print(f"[AUTH] token_data keys={list(token_data.keys())}")
         access_token = token_data.get("access_token")
         if not access_token:
+            print(f"[AUTH] FAILED: {token_data}")
             return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "token exchange failed", "detail": token_data})}
 
         profile = get_yandex_profile(access_token)
