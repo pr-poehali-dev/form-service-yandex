@@ -114,9 +114,21 @@ export default function Layout({ children, currentPage, onNavigate, user, onLogi
 
         {/* Legal links */}
         {!collapsed && (
-          <div className="px-3 pt-1 pb-1 flex gap-3">
+          <div className="px-3 pt-1 flex gap-3">
             <Link to="/privacy" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Конфиденциальность</Link>
             <Link to="/terms" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Соглашение</Link>
+          </div>
+        )}
+
+        {/* Dabble copyright */}
+        {!collapsed && (
+          <div className="px-3 pb-1 pt-2 flex items-center gap-2">
+            <img
+              src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/6d1c5a15-5202-4c11-8692-e5f169210482.png"
+              alt="Даббл"
+              className="h-4 opacity-25 object-contain flex-shrink-0"
+            />
+            <span className="text-[9px] text-foreground/20 leading-tight">Экосистема корпорации «Даббл» — 2026</span>
           </div>
         )}
       </div>
@@ -189,10 +201,20 @@ export default function Layout({ children, currentPage, onNavigate, user, onLogi
         </main>
 
         {/* Footer — mobile only */}
-        <footer className="lg:hidden flex items-center justify-center gap-4 py-3 border-t border-white/5">
-          <Link to="/privacy" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Конфиденциальность</Link>
-          <span className="text-foreground/15 text-[10px]">·</span>
-          <Link to="/terms" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Соглашение</Link>
+        <footer className="lg:hidden flex flex-col items-center gap-2 py-3 border-t border-white/5 px-4">
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Конфиденциальность</Link>
+            <span className="text-foreground/15 text-[10px]">·</span>
+            <Link to="/terms" className="text-[10px] text-foreground/25 hover:text-foreground/50 transition">Соглашение</Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <img
+              src="https://cdn.poehali.dev/projects/267e080f-eff8-4afa-95f4-c72c1b12bd16/bucket/6d1c5a15-5202-4c11-8692-e5f169210482.png"
+              alt="Даббл"
+              className="h-3.5 opacity-20 object-contain"
+            />
+            <span className="text-[9px] text-foreground/20">Экосистема корпорации «Даббл» — 2026</span>
+          </div>
         </footer>
       </div>
     </div>
