@@ -9,7 +9,7 @@ function getToken(): string {
 function authHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${getToken()}`,
+    "X-Authorization": `Bearer ${getToken()}`,
   };
 }
 

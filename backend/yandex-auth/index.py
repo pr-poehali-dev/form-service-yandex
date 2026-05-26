@@ -43,8 +43,8 @@ def ensure_tables():
 def exchange_code(code: str, redirect_uri: str = "") -> dict:
     client_id = os.environ["YANDEX_CLIENT_ID"]
     client_secret = os.environ["YANDEX_CLIENT_SECRET"]
-    # Используем redirect_uri из env (должен совпадать с Яндекс приложением)
-    uri = os.environ.get("YANDEX_REDIRECT_URI", "") or redirect_uri
+    # Используем redirect_uri от клиента (env только если клиент не передал)
+    uri = redirect_uri or os.environ.get("YANDEX_REDIRECT_URI", "")
     params = {
         "grant_type": "authorization_code",
         "code": code,

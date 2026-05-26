@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchMe = useCallback(async (token: string): Promise<AuthUser | null> => {
     try {
       const res = await fetch(`${AUTH_URL}?action=me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "X-Authorization": `Bearer ${token}` },
       });
       if (!res.ok) return null;
       const data = await res.json();
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       await fetch(AUTH_URL, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "X-Authorization": `Bearer ${token}` },
       }).catch(() => {});
       localStorage.removeItem(TOKEN_KEY);
     }
