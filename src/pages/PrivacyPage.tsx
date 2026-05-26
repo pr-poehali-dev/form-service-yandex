@@ -35,7 +35,13 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-foreground mb-3">2. Оператор персональных данных</h2>
-              <p>Оператором персональных данных является администрация сервиса «Формус» (далее — «Оператор»).</p>
+              <p>Оператором персональных данных является <strong className="text-foreground">ООО «ДАББЛ РУС»</strong> (далее — «Оператор»).</p>
+              <ul className="list-none mt-2 space-y-1 ml-0">
+                <li><span className="text-foreground/50">ИНН:</span> 8905069677</li>
+                <li><span className="text-foreground/50">КПП:</span> 890501001</li>
+                <li><span className="text-foreground/50">ОГРН:</span> 1258900000050</li>
+                <li><span className="text-foreground/50">Юридический адрес:</span> 629801, Ямало-Ненецкий автономный округ, г. о. город Ноябрьск, г. Ноябрьск, ул. Магистральная, д. 119, кв. 212</li>
+              </ul>
               <p className="mt-2">Контактный адрес для обращений по вопросам обработки персональных данных: <strong className="text-foreground">privacy@forms-dubble.ru</strong></p>
             </section>
 

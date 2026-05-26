@@ -28,7 +28,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-foreground mb-3">1. Предмет соглашения</h2>
-              <p>Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между администрацией сервиса «Формус» (далее — «Администрация») и физическим лицом (далее — «Пользователь»), использующим сервис по адресу <strong className="text-foreground">forms-dubble.ru</strong> (далее — «Сервис»).</p>
+              <p>Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между <strong className="text-foreground">ООО «ДАББЛ РУС»</strong> (ИНН 8905069677, ОГРН 1258900000050, юридический адрес: 629801, ЯНАО, г. Ноябрьск, ул. Магистральная, д. 119, кв. 212; далее — «Администрация») и физическим лицом (далее — «Пользователь»), использующим сервис по адресу <strong className="text-foreground">forms-dubble.ru</strong> (далее — «Сервис»).</p>
               <p className="mt-2">Используя Сервис, Пользователь подтверждает, что ознакомился с настоящим Соглашением и принимает его условия в полном объёме.</p>
             </section>
 
@@ -106,7 +106,8 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-lg font-semibold text-foreground mb-3">11. Контактная информация</h2>
-              <p>По всем вопросам, связанным с настоящим Соглашением, обращайтесь: <strong className="text-foreground">support@forms-dubble.ru</strong></p>
+              <p>ООО «ДАББЛ РУС», 629801, ЯНАО, г. Ноябрьск, ул. Магистральная, д. 119, кв. 212.</p>
+              <p className="mt-1">Электронная почта: <strong className="text-foreground">support@forms-dubble.ru</strong></p>
             </section>
 
           </div>
