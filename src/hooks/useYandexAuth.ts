@@ -90,7 +90,7 @@ export function useYandexAuth() {
     // Убираем code из URL сразу
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+    const redirectUri = `${window.location.origin}/login`;
     fetch(AUTH_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -99,12 +99,15 @@ export function useYandexAuth() {
       .then((r) => r.json())
       .then((data) => {
         const parsed = typeof data === "string" ? JSON.parse(data) : data;
+        console.log("[YandexAuth] exchange response:", parsed);
         if (parsed.token && parsed.user) {
           localStorage.setItem(TOKEN_KEY, parsed.token);
           setUser(parsed.user);
+        } else {
+          console.error("[YandexAuth] no token/user in response:", parsed);
         }
       })
-      .catch(() => {})
+      .catch((e) => console.error("[YandexAuth] fetch error:", e))
       .finally(() => setLoading(false));
   }, []);
 
