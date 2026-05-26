@@ -106,7 +106,10 @@ export default function BuilderPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsTab, setSettingsTab] = useState<"design" | "form">("design");
+  const [settingsTab, setSettingsTab] = useState<"design" | "form" | "submit">("design");
+  const [submitLabel, setSubmitLabel] = useState("Отправить");
+  const [thanksTitle, setThanksTitle] = useState("Спасибо за ответ!");
+  const [thanksText, setThanksText] = useState("Мы получили вашу форму и скоро свяжемся с вами.");
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -135,6 +138,9 @@ export default function BuilderPage() {
         if (data.status) setStatus(data.status);
         if (data.slug) setSlug(data.slug);
         if (data.settings?.bgPreset) setBgPreset(data.settings.bgPreset);
+        if (data.settings?.submitLabel) setSubmitLabel(data.settings.submitLabel);
+        if (data.settings?.thanksTitle) setThanksTitle(data.settings.thanksTitle);
+        if (data.settings?.thanksText) setThanksText(data.settings.thanksText);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -239,21 +245,21 @@ export default function BuilderPage() {
     if (!formId) return;
     setSaving(true);
     try {
-      await formsApi.update({ id: formId, title, description, fields, status, settings: { bgPreset } });
+      await formsApi.update({ id: formId, title, description, fields, status, settings: { bgPreset, submitLabel, thanksTitle, thanksText } });
       setSaved(true);
       showToast("Сохранено ✓");
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
     }
-  }, [formId, title, description, fields, status, bgPreset]);
+  }, [formId, title, description, fields, status, bgPreset, submitLabel, thanksTitle, thanksText]);
 
   const handlePublish = async () => {
     if (!formId) { showToast("Сначала сохраните форму"); return; }
     if (fields.length === 0) { showToast("Добавьте хотя бы одно поле"); return; }
     setSaving(true);
     try {
-      await formsApi.update({ id: formId, title, description, fields, status: "active", settings: { bgPreset } });
+      await formsApi.update({ id: formId, title, description, fields, status: "active", settings: { bgPreset, submitLabel, thanksTitle, thanksText } });
       setStatus("active");
       setShareOpen(true);
     } finally {
@@ -573,10 +579,19 @@ export default function BuilderPage() {
                 </div>
               ))}
 
-              <div className="pt-2">
+              <div className="pt-2 space-y-3">
                 <button className="w-full py-3 rounded-xl text-sm font-semibold text-white gradient-primary hover:opacity-90 transition glow-sm">
-                  Отправить
+                  {submitLabel}
                 </button>
+
+                {/* Thanks screen preview */}
+                {!preview && (
+                  <div className="rounded-2xl border border-dashed border-white/10 p-4 text-center">
+                    <p className="text-[10px] text-foreground/30 uppercase tracking-wider mb-2">Экран после отправки</p>
+                    <p className="text-sm font-semibold text-foreground/60">{thanksTitle}</p>
+                    <p className="text-xs text-foreground/35 mt-1">{thanksText}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -946,13 +961,13 @@ export default function BuilderPage() {
 
             {/* Tabs */}
             <div className="flex gap-1 px-6 pt-4">
-              {(["design","form"] as const).map(tab => (
+              {(["design","form","submit"] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setSettingsTab(tab)}
-                  className={`px-4 py-1.5 rounded-xl text-xs font-medium transition ${settingsTab === tab ? "bg-primary/20 text-primary border border-primary/30" : "text-foreground/40 hover:text-foreground"}`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${settingsTab === tab ? "bg-primary/20 text-primary border border-primary/30" : "text-foreground/40 hover:text-foreground"}`}
                 >
-                  {tab === "design" ? "Дизайн" : "Форма"}
+                  {tab === "design" ? "Дизайн" : tab === "form" ? "Форма" : "Отправка"}
                 </button>
               ))}
             </div>
@@ -979,6 +994,54 @@ export default function BuilderPage() {
                           <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] text-white/70">{bg.label}</span>
                         </button>
                       ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {settingsTab === "submit" && (
+                <>
+                  <div>
+                    <label className={labelCls}>Текст кнопки отправки</label>
+                    <input
+                      value={submitLabel}
+                      onChange={e => setSubmitLabel(e.target.value)}
+                      className={inputCls}
+                      placeholder="Отправить"
+                    />
+                  </div>
+
+                  <div className="border-t border-white/8 pt-5">
+                    <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mb-4">Экран благодарности</p>
+                    <p className="text-xs text-foreground/40 mb-4">Показывается после успешной отправки формы</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className={labelCls}>Заголовок</label>
+                        <input
+                          value={thanksTitle}
+                          onChange={e => setThanksTitle(e.target.value)}
+                          className={inputCls}
+                          placeholder="Спасибо за ответ!"
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Сообщение</label>
+                        <textarea
+                          value={thanksText}
+                          onChange={e => setThanksText(e.target.value)}
+                          className={`${inputCls} resize-none h-20`}
+                          placeholder="Мы получили вашу форму и скоро свяжемся с вами."
+                        />
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="mt-4 rounded-2xl p-5 text-center border border-white/8" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      <div className="w-10 h-10 rounded-full bg-green-400/15 flex items-center justify-center mx-auto mb-3">
+                        <Icon name="Check" size={20} className="text-green-400" />
+                      </div>
+                      <p className="text-sm font-bold text-foreground">{thanksTitle}</p>
+                      <p className="text-xs text-foreground/50 mt-1.5">{thanksText}</p>
                     </div>
                   </div>
                 </>
