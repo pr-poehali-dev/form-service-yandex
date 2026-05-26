@@ -51,20 +51,53 @@ const FIELD_GROUPS: { title: string; items: { type: string; label: string; icon:
 
 const FIELD_TYPES = FIELD_GROUPS.flatMap((g) => g.items);
 
+const BG_PRESETS = [
+  { id: "dark",     label: "Тёмный",     style: { background: "rgba(12,6,2,0.95)" } },
+  { id: "orange",   label: "Оранжевый",  style: { background: "linear-gradient(135deg, rgba(244,81,30,0.18), rgba(12,6,2,0.97))" } },
+  { id: "purple",   label: "Фиолетовый", style: { background: "linear-gradient(135deg, rgba(120,40,200,0.2), rgba(12,6,2,0.97))" } },
+  { id: "teal",     label: "Изумруд",    style: { background: "linear-gradient(135deg, rgba(20,180,140,0.18), rgba(12,6,2,0.97))" } },
+  { id: "blue",     label: "Синий",      style: { background: "linear-gradient(135deg, rgba(30,100,255,0.18), rgba(12,6,2,0.97))" } },
+  { id: "rose",     label: "Розовый",    style: { background: "linear-gradient(135deg, rgba(255,50,100,0.18), rgba(12,6,2,0.97))" } },
+  { id: "slate",    label: "Серый",      style: { background: "linear-gradient(135deg, rgba(100,120,140,0.2), rgba(12,6,2,0.97))" } },
+  { id: "white",    label: "Светлый",    style: { background: "linear-gradient(135deg, #1a1a2a, #2a2a3a)" } },
+];
+
 let _id = 1;
 const uid = () => `f${++_id}-${Date.now()}`;
+
+interface ExtendedField extends FormField {
+  description?: string;
+  minLength?: number;
+  maxLength?: number;
+  minValue?: number;
+  maxValue?: number;
+  minDate?: string;
+  maxDate?: string;
+  pattern?: string;
+  errorMessage?: string;
+  allowMultiple?: boolean;
+  maxFileSize?: number;
+  acceptedTypes?: string;
+  rows?: number;
+  showCharCount?: boolean;
+  consentText?: string;
+}
 
 export default function BuilderPage() {
   const navigate = useNavigate();
   const { formId } = useParams<{ formId: string }>();
   const token = typeof window !== "undefined" ? localStorage.getItem("ff_session_token") || "" : "";
   const onBack = () => navigate("/forms");
-  const [fields, setFields] = useState<FormField[]>([]);
+
+  const [fields, setFields] = useState<ExtendedField[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<ExtendedField | null>(null);
   const [title, setTitle] = useState("Новая форма");
+  const [titleFocused, setTitleFocused] = useState(false);
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<Form["status"]>("draft");
   const [slug, setSlug] = useState("");
+  const [bgPreset, setBgPreset] = useState("dark");
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -72,13 +105,14 @@ export default function BuilderPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [showPalette, setShowPalette] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"design" | "form">("design");
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
 
-  // Если зашли без formId — создаём пустую форму и редиректим
   useEffect(() => {
     if (formId || !token) return;
     formsApi.create({ title: "Новая форма", description: "" }).then((f) => {
@@ -86,7 +120,6 @@ export default function BuilderPage() {
     }).catch(() => {});
   }, [formId, token, navigate]);
 
-  // Загрузить форму если formId передан
   useEffect(() => {
     if (!formId) return;
     setLoading(true);
@@ -101,12 +134,12 @@ export default function BuilderPage() {
         if (data.fields) setFields(data.fields);
         if (data.status) setStatus(data.status);
         if (data.slug) setSlug(data.slug);
+        if (data.settings?.bgPreset) setBgPreset(data.settings.bgPreset);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [formId, token]);
 
-  // Получить список форм для нахождения нужной
   useEffect(() => {
     if (!formId || !token) return;
     formsApi.list().then(forms => {
@@ -119,8 +152,6 @@ export default function BuilderPage() {
       }
     }).catch(() => {});
   }, [formId, token]);
-
-  const selected = fields.find(f => f.id === selectedId) || null;
 
   const addField = (type: string) => {
     const ft = FIELD_TYPES.find(f => f.type === type);
@@ -135,7 +166,7 @@ export default function BuilderPage() {
       signature: "Подпись",
       file: "Загрузите файл",
       address: "Адрес",
-      consent: "Согласен с условиями обработки данных",
+      consent: "Я согласен с условиями обработки персональных данных",
       nps: "Насколько вероятно, что вы порекомендуете нас?",
       scale: "Оцените по шкале",
       url: "Ссылка",
@@ -145,7 +176,7 @@ export default function BuilderPage() {
       emoji: "Как вам наш сервис?",
     };
 
-    const field: FormField = {
+    const field: ExtendedField = {
       id: uid(),
       type,
       label: labelByType[type] || ft?.label || "Поле",
@@ -154,12 +185,14 @@ export default function BuilderPage() {
       options: defaultOptions,
     };
     setFields(prev => [...prev, field]);
+    setEditingField(field);
     setSelectedId(field.id);
     setShowPalette(false);
   };
 
-  const updateField = (id: string, patch: Partial<FormField>) => {
+  const updateField = (id: string, patch: Partial<ExtendedField>) => {
     setFields(prev => prev.map(f => f.id === id ? { ...f, ...patch } : f));
+    if (editingField?.id === id) setEditingField(prev => prev ? { ...prev, ...patch } : null);
   };
 
   const deleteField = (id: string) => {
@@ -168,6 +201,8 @@ export default function BuilderPage() {
       if (selectedId === id) setSelectedId(rest[0]?.id || null);
       return rest;
     });
+    setEditingField(null);
+    setSelectedId(null);
   };
 
   const moveField = (id: string, dir: -1 | 1) => {
@@ -181,31 +216,44 @@ export default function BuilderPage() {
     });
   };
 
+  const openEdit = (field: ExtendedField) => {
+    setEditingField({ ...field });
+    setSelectedId(field.id);
+  };
+
+  const closeEdit = () => {
+    if (editingField) {
+      setFields(prev => prev.map(f => f.id === editingField.id ? editingField : f));
+    }
+    setEditingField(null);
+  };
+
+  const saveEdit = () => {
+    if (editingField) {
+      setFields(prev => prev.map(f => f.id === editingField.id ? editingField : f));
+    }
+    setEditingField(null);
+  };
+
   const handleSave = useCallback(async () => {
     if (!formId) return;
     setSaving(true);
     try {
-      await formsApi.update({ id: formId, title, description, fields, status });
+      await formsApi.update({ id: formId, title, description, fields, status, settings: { bgPreset } });
       setSaved(true);
       showToast("Сохранено ✓");
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
     }
-  }, [formId, title, description, fields, status]);
+  }, [formId, title, description, fields, status, bgPreset]);
 
   const handlePublish = async () => {
-    if (!formId) {
-      showToast("Сначала сохраните форму");
-      return;
-    }
-    if (fields.length === 0) {
-      showToast("Добавьте хотя бы одно поле");
-      return;
-    }
+    if (!formId) { showToast("Сначала сохраните форму"); return; }
+    if (fields.length === 0) { showToast("Добавьте хотя бы одно поле"); return; }
     setSaving(true);
     try {
-      await formsApi.update({ id: formId, title, description, fields, status: "active" });
+      await formsApi.update({ id: formId, title, description, fields, status: "active", settings: { bgPreset } });
       setStatus("active");
       setShareOpen(true);
     } finally {
@@ -214,17 +262,18 @@ export default function BuilderPage() {
   };
 
   const handleCopyLink = () => {
-    const url = formsApi.publicUrl(slug);
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(formsApi.publicUrl(slug));
     showToast("Ссылка скопирована!");
   };
 
+  const currentBg = BG_PRESETS.find(b => b.id === bgPreset)?.style || BG_PRESETS[0].style;
+
   const fieldBase = "w-full px-4 py-3 rounded-xl glass text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50";
 
-  const renderPreview = (field: FormField) => {
+  const renderPreview = (field: ExtendedField) => {
     switch (field.type) {
       case "textarea":
-        return <textarea className={`${fieldBase} h-24 resize-none`} placeholder={field.placeholder || "Введите текст..."} />;
+        return <textarea className={`${fieldBase} resize-none`} style={{ height: `${(field.rows || 3) * 28}px` }} placeholder={field.placeholder || "Введите текст..."} />;
       case "select":
         return (
           <select className={`${fieldBase} bg-transparent`}>
@@ -267,9 +316,7 @@ export default function BuilderPage() {
         return (
           <div className="grid grid-cols-11 gap-1.5">
             {[0,1,2,3,4,5,6,7,8,9,10].map(n => (
-              <button key={n} type="button" className="aspect-square rounded-lg glass text-xs font-semibold text-foreground/60 hover:text-foreground hover:border-primary/40 transition">
-                {n}
-              </button>
+              <button key={n} type="button" className="aspect-square rounded-lg glass text-xs font-semibold text-foreground/60 hover:text-foreground hover:border-primary/40 transition">{n}</button>
             ))}
           </div>
         );
@@ -277,9 +324,7 @@ export default function BuilderPage() {
         return (
           <div className="flex items-center gap-2">
             {[1,2,3,4,5].map(n => (
-              <button key={n} type="button" className="flex-1 py-2 rounded-lg glass text-sm text-foreground/60 hover:text-foreground hover:border-primary/40 transition">
-                {n}
-              </button>
+              <button key={n} type="button" className="flex-1 py-2 rounded-lg glass text-sm text-foreground/60 hover:text-foreground hover:border-primary/40 transition">{n}</button>
             ))}
           </div>
         );
@@ -327,15 +372,24 @@ export default function BuilderPage() {
           </div>
         );
       case "date":
-        return <input type="date" className={fieldBase} />;
+        return <input type="date" className={fieldBase} min={field.minDate} max={field.maxDate} />;
       case "time":
         return <input type="time" className={fieldBase} />;
       case "url":
         return <input type="url" className={fieldBase} placeholder={field.placeholder || "https://"} />;
       default:
-        return <input type={field.type === "phone" ? "tel" : field.type === "number" ? "number" : field.type === "email" ? "email" : "text"} className={fieldBase} placeholder={field.placeholder || "Введите значение..."} />;
+        return <input
+          type={field.type === "phone" ? "tel" : field.type === "number" ? "number" : field.type === "email" ? "email" : "text"}
+          className={fieldBase}
+          placeholder={field.placeholder || "Введите значение..."}
+          min={field.type === "number" ? field.minValue : undefined}
+          max={field.type === "number" ? field.maxValue : undefined}
+        />;
     }
   };
+
+  const inputCls = "w-full px-3 py-2 rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 border border-white/10 bg-white/5 placeholder:text-foreground/30";
+  const labelCls = "block text-xs font-medium text-foreground/50 mb-1.5 uppercase tracking-wider";
 
   if (loading) {
     return (
@@ -347,7 +401,6 @@ export default function BuilderPage() {
 
   return (
     <div className="h-[calc(100vh-0px)] flex flex-col">
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-medium text-white animate-fade-in"
           style={{ background: "rgba(244,81,30,0.95)", backdropFilter: "blur(12px)", boxShadow: "0 8px 24px rgba(244,81,30,0.4)" }}>
@@ -356,27 +409,54 @@ export default function BuilderPage() {
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 px-6 py-3 border-b border-white/7 flex-shrink-0"
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-white/7 flex-shrink-0"
         style={{ background: "rgba(8,4,2,0.7)", backdropFilter: "blur(12px)" }}>
-        <button onClick={onBack} className="p-2 rounded-xl glass text-foreground/50 hover:text-foreground transition">
+        <button onClick={onBack} className="p-2 rounded-xl glass text-foreground/50 hover:text-foreground transition flex-shrink-0">
           <Icon name="ArrowLeft" size={16} />
         </button>
-        <input
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          className="flex-1 bg-transparent text-base font-bold text-foreground focus:outline-none min-w-0"
-          placeholder="Название формы..."
-        />
+
+        {/* Title with hint */}
+        <div className="relative flex-1 min-w-0 group">
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onFocus={() => setTitleFocused(true)}
+            onBlur={() => setTitleFocused(false)}
+            className="w-full bg-transparent text-base font-bold text-foreground focus:outline-none pr-8"
+            placeholder="Название формы..."
+          />
+          {!titleFocused && (
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition pointer-events-none">
+              <Icon name="Pencil" size={13} className="text-foreground/30" />
+            </div>
+          )}
+          {titleFocused && (
+            <div className="absolute left-0 top-full mt-1.5 z-30 bg-black/80 text-xs text-foreground/60 px-2.5 py-1.5 rounded-lg border border-white/10 whitespace-nowrap pointer-events-none">
+              Введите название формы и нажмите Enter или кликните в другое место
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${
+          <span className={`hidden sm:inline text-xs px-2.5 py-1 rounded-full border font-medium ${
             status === "active" ? "text-green-400 border-green-400/30 bg-green-400/10" :
             status === "paused" ? "text-yellow-400 border-yellow-400/30 bg-yellow-400/10" :
             "text-foreground/40 border-white/10 bg-white/5"
           }`}>
             {status === "active" ? "Активна" : status === "paused" ? "Пауза" : "Черновик"}
           </span>
+
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition glass text-foreground/50 hover:text-foreground"
+            title="Настройки формы"
+          >
+            <Icon name="Settings2" size={14} />
+            <span className="hidden sm:inline">Настройки</span>
+          </button>
+
           {slug && (
-            <button onClick={handleCopyLink} className="flex items-center gap-1.5 text-xs glass px-3 py-1.5 rounded-xl text-foreground/50 hover:text-foreground transition">
+            <button onClick={handleCopyLink} className="hidden sm:flex items-center gap-1.5 text-xs glass px-3 py-1.5 rounded-xl text-foreground/50 hover:text-foreground transition">
               <Icon name="Link" size={13} />
               Ссылка
             </button>
@@ -386,7 +466,7 @@ export default function BuilderPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition glass ${preview ? "text-primary border-primary/30" : "text-foreground/50 hover:text-foreground"}`}
           >
             <Icon name={preview ? "EyeOff" : "Eye"} size={14} />
-            {preview ? "Редактор" : "Просмотр"}
+            <span className="hidden sm:inline">{preview ? "Редактор" : "Просмотр"}</span>
           </button>
           <button
             onClick={handleSave}
@@ -394,7 +474,7 @@ export default function BuilderPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition ${saved ? "text-green-400 bg-green-400/10 border border-green-400/30" : "glass text-foreground/60 hover:text-foreground"}`}
           >
             <Icon name={saving ? "Loader2" : saved ? "Check" : "Save"} size={14} className={saving ? "animate-spin" : ""} />
-            {saved ? "Сохранено" : "Сохранить"}
+            <span className="hidden sm:inline">{saved ? "Сохранено" : "Сохранить"}</span>
           </button>
           <button
             onClick={handlePublish}
@@ -402,7 +482,7 @@ export default function BuilderPage() {
             className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold text-white gradient-primary hover:opacity-90 transition glow-sm disabled:opacity-60"
           >
             <Icon name="Share2" size={14} />
-            Опубликовать
+            <span className="hidden sm:inline">Опубликовать</span>
           </button>
         </div>
       </div>
@@ -411,21 +491,21 @@ export default function BuilderPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left palette */}
         {!preview && (
-          <div className="w-56 flex-shrink-0 overflow-y-auto p-3 space-y-4 border-r border-white/6 hidden lg:block"
+          <div className="w-52 flex-shrink-0 overflow-y-auto p-3 space-y-4 border-r border-white/6 hidden lg:block"
             style={{ background: "rgba(8,4,2,0.5)" }}>
             {FIELD_GROUPS.map(group => (
               <div key={group.title} className="space-y-1">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-2">{group.title}</p>
                 {group.items.map(ft => (
-              <button
-                key={ft.type}
-                onClick={() => addField(ft.type)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl glass text-xs text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all group text-left"
-              >
-                <Icon name={ft.icon} fallback="Circle" size={14} className={ft.color} />
-                <span>{ft.label}</span>
-                <Icon name="Plus" size={11} className="ml-auto opacity-0 group-hover:opacity-100 text-primary transition" />
-              </button>
+                  <button
+                    key={ft.type}
+                    onClick={() => addField(ft.type)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl glass text-xs text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all group text-left"
+                  >
+                    <Icon name={ft.icon} fallback="Circle" size={14} className={ft.color} />
+                    <span>{ft.label}</span>
+                    <Icon name="Plus" size={11} className="ml-auto opacity-0 group-hover:opacity-100 text-primary transition" />
+                  </button>
                 ))}
               </div>
             ))}
@@ -433,9 +513,9 @@ export default function BuilderPage() {
         )}
 
         {/* Canvas */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="max-w-xl mx-auto">
-            <div className="glass rounded-3xl p-8 space-y-5">
+            <div className="rounded-3xl p-6 md:p-8 space-y-5 border border-white/8" style={currentBg}>
               <div className="pb-4 border-b border-white/8">
                 <h2 className="text-xl font-bold text-foreground">{title}</h2>
                 {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
@@ -445,36 +525,51 @@ export default function BuilderPage() {
                 <div className="text-center py-10 text-muted-foreground">
                   <Icon name="MousePointerClick" size={28} className="mx-auto mb-3 opacity-25" />
                   <p className="text-sm">Добавь поля из панели слева</p>
+                  <p className="text-xs mt-1 opacity-50">или нажми + на мобильном</p>
                 </div>
               )}
 
               {fields.map((field, idx) => (
                 <div
                   key={field.id}
-                  onClick={() => !preview && setSelectedId(field.id)}
-                  className={`relative group rounded-2xl transition-all ${!preview ? `cursor-pointer p-3 -mx-3 ${selectedId === field.id ? "bg-primary/8 ring-1 ring-primary/25" : "hover:bg-white/3"}` : ""}`}
+                  onClick={() => !preview && openEdit(field)}
+                  className={`relative group rounded-2xl transition-all ${!preview
+                    ? `cursor-pointer p-3 -mx-3 ${selectedId === field.id ? "bg-primary/8 ring-1 ring-primary/25" : "hover:bg-white/3"}`
+                    : ""}`}
                 >
                   {!preview && (
-                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
                       <button onClick={e => { e.stopPropagation(); moveField(field.id, -1); }} disabled={idx === 0}
-                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-foreground disabled:opacity-20">
+                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-foreground disabled:opacity-20 transition">
                         <Icon name="ChevronUp" size={12} />
                       </button>
                       <button onClick={e => { e.stopPropagation(); moveField(field.id, 1); }} disabled={idx === fields.length - 1}
-                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-foreground disabled:opacity-20">
+                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-foreground disabled:opacity-20 transition">
                         <Icon name="ChevronDown" size={12} />
                       </button>
+                      <button onClick={e => { e.stopPropagation(); openEdit(field); }}
+                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-primary transition">
+                        <Icon name="Settings2" size={12} />
+                      </button>
                       <button onClick={e => { e.stopPropagation(); deleteField(field.id); }}
-                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-red-400">
+                        className="w-6 h-6 rounded-lg glass flex items-center justify-center text-foreground/40 hover:text-red-400 transition">
                         <Icon name="X" size={12} />
                       </button>
                     </div>
                   )}
-                  <label className="text-sm font-medium text-foreground block mb-2">
-                    {field.label}
-                    {field.required && <span className="text-primary ml-1">*</span>}
-                  </label>
+                  {field.type !== "consent" && field.type !== "section" && (
+                    <label className="text-sm font-medium text-foreground block mb-1.5">
+                      {field.label}
+                      {field.required && <span className="text-primary ml-1">*</span>}
+                    </label>
+                  )}
+                  {field.description && field.type !== "section" && (
+                    <p className="text-xs text-muted-foreground mb-2">{field.description}</p>
+                  )}
                   {renderPreview(field)}
+                  {field.type !== "section" && field.showCharCount && field.maxLength && (
+                    <p className="text-[10px] text-foreground/30 mt-1 text-right">0 / {field.maxLength}</p>
+                  )}
                 </div>
               ))}
 
@@ -486,89 +581,13 @@ export default function BuilderPage() {
             </div>
           </div>
         </div>
-
-        {/* Right props panel */}
-        {!preview && (
-          <div className="w-56 flex-shrink-0 overflow-y-auto p-3 border-l border-white/6 hidden xl:block"
-            style={{ background: "rgba(8,4,2,0.5)" }}>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-3">Свойства</p>
-
-            {selected ? (
-              <div className="space-y-4 glass rounded-2xl p-4">
-                <div>
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Подпись</label>
-                  <input
-                    value={selected.label}
-                    onChange={e => updateField(selected.id, { label: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl glass text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Подсказка</label>
-                  <input
-                    value={selected.placeholder || ""}
-                    onChange={e => updateField(selected.id, { placeholder: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl glass text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                    placeholder="placeholder..."
-                  />
-                </div>
-
-                {["select","radio","checkbox","yesno","emoji"].includes(selected.type) && (
-                  <div>
-                    <label className="text-[10px] text-muted-foreground uppercase tracking-wider block mb-1.5">Варианты (по одному)</label>
-                    <textarea
-                      value={(selected.options || []).join("\n")}
-                      onChange={e => updateField(selected.id, { options: e.target.value.split("\n").filter(Boolean) })}
-                      className="w-full px-3 py-2 rounded-xl glass text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 h-24 resize-none"
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <label className="text-sm text-foreground">Обязательное</label>
-                  <button
-                    onClick={() => updateField(selected.id, { required: !selected.required })}
-                    className={`relative w-9 h-5 rounded-full transition-colors ${selected.required ? "bg-primary" : "bg-white/15"}`}
-                  >
-                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${selected.required ? "translate-x-4" : "translate-x-0.5"}`} />
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => deleteField(selected.id)}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium text-red-400 bg-red-400/10 hover:bg-red-400/20 transition"
-                >
-                  <Icon name="Trash2" size={13} />
-                  Удалить поле
-                </button>
-              </div>
-            ) : (
-              <div className="glass rounded-2xl p-5 text-center text-muted-foreground">
-                <Icon name="MousePointerClick" size={22} className="mx-auto mb-2 opacity-30" />
-                <p className="text-xs">Выбери поле для настройки</p>
-              </div>
-            )}
-
-            {/* Form meta */}
-            <div className="mt-3 space-y-3 glass rounded-2xl p-4">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Описание</p>
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl glass text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 h-16 resize-none"
-                placeholder="Опишите форму..."
-              />
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Mobile palette FAB */}
+      {/* Mobile FAB */}
       {!preview && (
         <button
           onClick={() => setShowPalette(true)}
           className="lg:hidden fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full gradient-primary flex items-center justify-center text-white shadow-lg glow-orange"
-          title="Добавить поле"
         >
           <Icon name="Plus" size={24} />
         </button>
@@ -581,7 +600,7 @@ export default function BuilderPage() {
           <div
             className="relative w-full rounded-t-3xl p-4 max-h-[80vh] overflow-y-auto animate-slide-up"
             style={{ background: "rgba(12,6,2,0.97)", borderTop: "1px solid rgba(244,81,30,0.25)" }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4 px-1">
               <h3 className="text-base font-bold text-foreground">Добавить поле</h3>
@@ -589,11 +608,11 @@ export default function BuilderPage() {
                 <Icon name="X" size={16} />
               </button>
             </div>
-            {FIELD_GROUPS.map((group) => (
+            {FIELD_GROUPS.map(group => (
               <div key={group.title} className="mb-4">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-2 mb-2">{group.title}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {group.items.map((ft) => (
+                  {group.items.map(ft => (
                     <button
                       key={ft.type}
                       onClick={() => addField(ft.type)}
@@ -606,6 +625,409 @@ export default function BuilderPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Field editor modal */}
+      {editingField && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeEdit}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl animate-scale-in"
+            style={{ background: "rgba(12,6,2,0.98)", border: "1px solid rgba(244,81,30,0.2)", boxShadow: "0 24px 64px rgba(0,0,0,0.8)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 sticky top-0 z-10"
+              style={{ background: "rgba(12,6,2,0.98)" }}>
+              <div className="flex items-center gap-2.5">
+                {(() => {
+                  const ft = FIELD_TYPES.find(f => f.type === editingField.type);
+                  return ft ? <Icon name={ft.icon} fallback="Circle" size={16} className={ft.color} /> : null;
+                })()}
+                <h3 className="text-sm font-bold text-foreground">
+                  {FIELD_TYPES.find(f => f.type === editingField.type)?.label || "Настройки поля"}
+                </h3>
+              </div>
+              <button onClick={closeEdit} className="p-1.5 rounded-xl glass text-foreground/40 hover:text-foreground transition">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Label */}
+              {editingField.type !== "section" && (
+                <div>
+                  <label className={labelCls}>Вопрос / Подпись</label>
+                  <input
+                    value={editingField.label}
+                    onChange={e => setEditingField(p => p ? { ...p, label: e.target.value } : p)}
+                    className={inputCls}
+                    placeholder="Введите вопрос..."
+                  />
+                </div>
+              )}
+
+              {/* Section title */}
+              {editingField.type === "section" && (
+                <div>
+                  <label className={labelCls}>Заголовок раздела</label>
+                  <input
+                    value={editingField.label}
+                    onChange={e => setEditingField(p => p ? { ...p, label: e.target.value } : p)}
+                    className={inputCls}
+                    placeholder="Название раздела..."
+                  />
+                </div>
+              )}
+
+              {/* Description */}
+              {editingField.type !== "section" && (
+                <div>
+                  <label className={labelCls}>Описание / Пояснение</label>
+                  <textarea
+                    value={editingField.description || ""}
+                    onChange={e => setEditingField(p => p ? { ...p, description: e.target.value } : p)}
+                    className={`${inputCls} resize-none h-16`}
+                    placeholder="Дополнительное пояснение для пользователя..."
+                  />
+                </div>
+              )}
+
+              {/* Placeholder */}
+              {["text","textarea","email","phone","number","url","address"].includes(editingField.type) && (
+                <div>
+                  <label className={labelCls}>Подсказка внутри поля</label>
+                  <input
+                    value={editingField.placeholder || ""}
+                    onChange={e => setEditingField(p => p ? { ...p, placeholder: e.target.value } : p)}
+                    className={inputCls}
+                    placeholder="placeholder..."
+                  />
+                </div>
+              )}
+
+              {/* Options */}
+              {["select","radio","checkbox","yesno","emoji"].includes(editingField.type) && (
+                <div>
+                  <label className={labelCls}>Варианты — каждый с новой строки</label>
+                  <textarea
+                    value={(editingField.options || []).join("\n")}
+                    onChange={e => setEditingField(p => p ? { ...p, options: e.target.value.split("\n") } : p)}
+                    className={`${inputCls} resize-none h-28`}
+                    placeholder={"Вариант 1\nВариант 2\nВариант 3"}
+                  />
+                </div>
+              )}
+
+              {/* Rows for textarea */}
+              {editingField.type === "textarea" && (
+                <div>
+                  <label className={labelCls}>Высота поля (строк): {editingField.rows || 3}</label>
+                  <input
+                    type="range" min={2} max={10}
+                    value={editingField.rows || 3}
+                    onChange={e => setEditingField(p => p ? { ...p, rows: +e.target.value } : p)}
+                    className="w-full accent-primary"
+                  />
+                </div>
+              )}
+
+              {/* --- Validation section --- */}
+              <div className="border-t border-white/8 pt-5">
+                <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mb-4">Валидация</p>
+
+                {/* Required */}
+                {editingField.type !== "section" && (
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-foreground">Обязательное поле</p>
+                      <p className="text-xs text-foreground/40">Нельзя отправить форму без ответа</p>
+                    </div>
+                    <button
+                      onClick={() => setEditingField(p => p ? { ...p, required: !p.required } : p)}
+                      className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 ${editingField.required ? "bg-primary" : "bg-white/15"}`}
+                      style={{ minWidth: 40, height: 22 }}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${editingField.required ? "translate-x-5" : "translate-x-0.5"}`} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Min/Max length for text */}
+                {["text","textarea","email","url","phone"].includes(editingField.type) && (
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <label className={labelCls}>Мин. символов</label>
+                      <input
+                        type="number" min={0}
+                        value={editingField.minLength || ""}
+                        onChange={e => setEditingField(p => p ? { ...p, minLength: e.target.value ? +e.target.value : undefined } : p)}
+                        className={inputCls}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Макс. символов</label>
+                      <input
+                        type="number" min={0}
+                        value={editingField.maxLength || ""}
+                        onChange={e => setEditingField(p => p ? { ...p, maxLength: e.target.value ? +e.target.value : undefined } : p)}
+                        className={inputCls}
+                        placeholder="∞"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Show char count */}
+                {["text","textarea"].includes(editingField.type) && editingField.maxLength && (
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-foreground">Счётчик символов</p>
+                      <p className="text-xs text-foreground/40">Показывать «0 / {editingField.maxLength}»</p>
+                    </div>
+                    <button
+                      onClick={() => setEditingField(p => p ? { ...p, showCharCount: !p.showCharCount } : p)}
+                      className={`relative flex-shrink-0 rounded-full transition-colors ${editingField.showCharCount ? "bg-primary" : "bg-white/15"}`}
+                      style={{ minWidth: 40, height: 22 }}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${editingField.showCharCount ? "translate-x-5" : "translate-x-0.5"}`} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Min/Max for number */}
+                {editingField.type === "number" && (
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <label className={labelCls}>Минимум</label>
+                      <input
+                        type="number"
+                        value={editingField.minValue ?? ""}
+                        onChange={e => setEditingField(p => p ? { ...p, minValue: e.target.value ? +e.target.value : undefined } : p)}
+                        className={inputCls}
+                        placeholder="—"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Максимум</label>
+                      <input
+                        type="number"
+                        value={editingField.maxValue ?? ""}
+                        onChange={e => setEditingField(p => p ? { ...p, maxValue: e.target.value ? +e.target.value : undefined } : p)}
+                        className={inputCls}
+                        placeholder="—"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Min/Max date */}
+                {editingField.type === "date" && (
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <label className={labelCls}>Дата от</label>
+                      <input
+                        type="date"
+                        value={editingField.minDate || ""}
+                        onChange={e => setEditingField(p => p ? { ...p, minDate: e.target.value } : p)}
+                        className={inputCls}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Дата до</label>
+                      <input
+                        type="date"
+                        value={editingField.maxDate || ""}
+                        onChange={e => setEditingField(p => p ? { ...p, maxDate: e.target.value } : p)}
+                        className={inputCls}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* File settings */}
+                {editingField.type === "file" && (
+                  <>
+                    <div className="mb-4">
+                      <label className={labelCls}>Допустимые типы файлов</label>
+                      <input
+                        value={editingField.acceptedTypes || ""}
+                        onChange={e => setEditingField(p => p ? { ...p, acceptedTypes: e.target.value } : p)}
+                        className={inputCls}
+                        placeholder="image/*, .pdf, .docx"
+                      />
+                      <p className="text-[10px] text-foreground/30 mt-1">Через запятую: image/*, .pdf, .docx</p>
+                    </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-sm text-foreground">Несколько файлов</p>
+                        <p className="text-xs text-foreground/40">Разрешить загрузку нескольких файлов</p>
+                      </div>
+                      <button
+                        onClick={() => setEditingField(p => p ? { ...p, allowMultiple: !p.allowMultiple } : p)}
+                        className={`relative flex-shrink-0 rounded-full transition-colors ${editingField.allowMultiple ? "bg-primary" : "bg-white/15"}`}
+                        style={{ minWidth: 40, height: 22 }}
+                      >
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${editingField.allowMultiple ? "translate-x-5" : "translate-x-0.5"}`} />
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Regex pattern */}
+                {["text","email","phone","url"].includes(editingField.type) && (
+                  <div className="mb-4">
+                    <label className={labelCls}>Регулярное выражение (regex)</label>
+                    <input
+                      value={editingField.pattern || ""}
+                      onChange={e => setEditingField(p => p ? { ...p, pattern: e.target.value } : p)}
+                      className={inputCls}
+                      placeholder="^[a-zA-Z]+$"
+                    />
+                    <p className="text-[10px] text-foreground/30 mt-1">Оставьте пустым если не нужно</p>
+                  </div>
+                )}
+
+                {/* Custom error */}
+                {editingField.type !== "section" && (
+                  <div>
+                    <label className={labelCls}>Сообщение об ошибке</label>
+                    <input
+                      value={editingField.errorMessage || ""}
+                      onChange={e => setEditingField(p => p ? { ...p, errorMessage: e.target.value } : p)}
+                      className={inputCls}
+                      placeholder="Это поле заполнено неверно"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="sticky bottom-0 px-6 py-4 border-t border-white/8 flex items-center justify-between gap-3"
+              style={{ background: "rgba(12,6,2,0.98)" }}>
+              <button
+                onClick={() => { deleteField(editingField.id); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-red-400 bg-red-400/10 hover:bg-red-400/20 transition"
+              >
+                <Icon name="Trash2" size={13} />
+                Удалить поле
+              </button>
+              <button
+                onClick={saveEdit}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white gradient-primary hover:opacity-90 transition"
+              >
+                <Icon name="Check" size={14} />
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings modal */}
+      {settingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSettingsOpen(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-md max-h-[85vh] overflow-y-auto rounded-3xl animate-scale-in"
+            style={{ background: "rgba(12,6,2,0.98)", border: "1px solid rgba(244,81,30,0.2)", boxShadow: "0 24px 64px rgba(0,0,0,0.8)" }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+              <h3 className="text-sm font-bold text-foreground">Настройки формы</h3>
+              <button onClick={() => setSettingsOpen(false)} className="p-1.5 rounded-xl glass text-foreground/40 hover:text-foreground transition">
+                <Icon name="X" size={16} />
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-1 px-6 pt-4">
+              {(["design","form"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setSettingsTab(tab)}
+                  className={`px-4 py-1.5 rounded-xl text-xs font-medium transition ${settingsTab === tab ? "bg-primary/20 text-primary border border-primary/30" : "text-foreground/40 hover:text-foreground"}`}
+                >
+                  {tab === "design" ? "Дизайн" : "Форма"}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-6 space-y-5">
+              {settingsTab === "design" && (
+                <>
+                  <div>
+                    <label className={labelCls}>Фон формы</label>
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {BG_PRESETS.map(bg => (
+                        <button
+                          key={bg.id}
+                          onClick={() => setBgPreset(bg.id)}
+                          className={`relative h-14 rounded-xl overflow-hidden border-2 transition ${bgPreset === bg.id ? "border-primary" : "border-white/10 hover:border-white/30"}`}
+                          style={bg.style}
+                          title={bg.label}
+                        >
+                          {bgPreset === bg.id && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Icon name="Check" size={16} className="text-white drop-shadow" />
+                            </div>
+                          )}
+                          <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] text-white/70">{bg.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {settingsTab === "form" && (
+                <>
+                  <div>
+                    <label className={labelCls}>Название формы</label>
+                    <input
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
+                      className={inputCls}
+                      placeholder="Название формы..."
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Описание формы</label>
+                    <textarea
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      className={`${inputCls} resize-none h-20`}
+                      placeholder="Опишите, зачем эта форма..."
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Статус</label>
+                    <select
+                      value={status}
+                      onChange={e => setStatus(e.target.value as Form["status"])}
+                      className={`${inputCls} bg-black/30`}
+                    >
+                      <option value="draft">Черновик</option>
+                      <option value="active">Активна</option>
+                      <option value="paused">Пауза</option>
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="px-6 pb-6">
+              <button
+                onClick={() => setSettingsOpen(false)}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold text-white gradient-primary hover:opacity-90 transition"
+              >
+                Готово
+              </button>
+            </div>
           </div>
         </div>
       )}
