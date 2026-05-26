@@ -42,7 +42,7 @@ export default function PrivacyPage() {
                 <li><span className="text-foreground/50">ОГРН:</span> 1258900000050</li>
                 <li><span className="text-foreground/50">Юридический адрес:</span> 629801, Ямало-Ненецкий автономный округ, г. о. город Ноябрьск, г. Ноябрьск, ул. Магистральная, д. 119, кв. 212</li>
               </ul>
-              <p className="mt-2">Контактный адрес для обращений по вопросам обработки персональных данных: <strong className="text-foreground">privacy@forms-dubble.ru</strong></p>
+              <p className="mt-2">Контактный адрес для обращений по вопросам обработки персональных данных: <strong className="text-foreground">business.dabblrus@bk.ru</strong></p>
             </section>
 
             <section>
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
                 <li>Отозвать согласие на обработку персональных данных</li>
                 <li>Обжаловать действия Оператора в Роскомнадзор</li>
               </ul>
-              <p className="mt-2">Для реализации прав обратитесь по адресу: <strong className="text-foreground">privacy@forms-dubble.ru</strong></p>
+              <p className="mt-2">Для реализации прав обратитесь по адресу: <strong className="text-foreground">business.dabblrus@bk.ru</strong></p>
             </section>
 
             <section>

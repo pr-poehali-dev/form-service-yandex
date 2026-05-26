@@ -107,7 +107,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-lg font-semibold text-foreground mb-3">11. Контактная информация</h2>
               <p>ООО «ДАББЛ РУС», 629801, ЯНАО, г. Ноябрьск, ул. Магистральная, д. 119, кв. 212.</p>
-              <p className="mt-1">Электронная почта: <strong className="text-foreground">support@forms-dubble.ru</strong></p>
+              <p className="mt-1">Электронная почта: <strong className="text-foreground">business.dabblrus@bk.ru</strong></p>
             </section>
 
           </div>
