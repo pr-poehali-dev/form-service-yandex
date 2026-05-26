@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
-import { formsApi, responsesApi, type Form, type FormField } from "@/lib/api";
+import { formsApi, responsesApi, uploadApi, type Form, type FormField } from "@/lib/api";
 
 interface FormPublicPageProps {
   slug: string;
@@ -14,6 +14,7 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     formsApi.getBySlug(slug).then(data => {
@@ -198,19 +199,54 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
           </div>
         );
       }
-      case "file":
+      case "file": {
+        const isUploading = uploading[field.id];
+        const isUploaded = val && val.startsWith("http");
         return (
-          <label className={`${base} ${errCls} flex items-center justify-center gap-2 py-5 cursor-pointer hover:border-primary/40 transition`} style={inputStyle}>
-            <Icon name="Upload" size={16} />
-            <span className="text-sm">{val ? val : "Выбрать файл"}</span>
+          <label className={`${base} ${errCls} flex flex-col items-center justify-center gap-2 py-5 cursor-pointer hover:border-primary/40 transition ${isUploading ? "opacity-70 pointer-events-none" : ""}`} style={inputStyle}>
+            {isUploading
+              ? <Icon name="Loader2" size={20} className="animate-spin text-primary" />
+              : isUploaded
+                ? <Icon name="CheckCircle" size={20} className="text-green-400" />
+                : <Icon name="Upload" size={20} className="text-muted-foreground" />}
+            <span className="text-sm text-center">
+              {isUploading
+                ? "Загружаю файл..."
+                : isUploaded
+                  ? <span className="text-green-400">Файл загружен ✓</span>
+                  : "Нажмите, чтобы выбрать файл"}
+            </span>
+            {isUploaded && (
+              <a href={val} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-primary underline"
+                onClick={e => e.stopPropagation()}>
+                Открыть файл
+              </a>
+            )}
             <input type="file" className="hidden"
-              onChange={e => {
-                const f = e.target.files?.[0];
-                if (f) setValue(field.id, f.name);
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+              onChange={async e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setUploading(prev => ({ ...prev, [field.id]: true }));
+                setErrors(prev => ({ ...prev, [field.id]: "" }));
+                try {
+                  const result = await uploadApi.uploadFile(file);
+                  if (result.ok && result.url) {
+                    setValue(field.id, result.url);
+                  } else {
+                    setErrors(prev => ({ ...prev, [field.id]: "Ошибка загрузки файла" }));
+                  }
+                } catch {
+                  setErrors(prev => ({ ...prev, [field.id]: "Ошибка загрузки файла" }));
+                } finally {
+                  setUploading(prev => ({ ...prev, [field.id]: false }));
+                }
               }}
             />
           </label>
         );
+      }
       case "signature":
         return (
           <div className="rounded-xl border-dashed flex items-center justify-center h-28 text-muted-foreground text-sm" style={inputStyle}>

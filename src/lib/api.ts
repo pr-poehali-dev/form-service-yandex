@@ -1,5 +1,6 @@
 const FORMS_URL = "https://functions.poehali.dev/64ba70e7-2376-416b-9dff-265e6a77cd03";
 const RESPONSES_URL = "https://functions.poehali.dev/0c74e3f4-01ab-421c-9583-ab61ddd23057";
+const UPLOAD_URL = "https://functions.poehali.dev/a138996c-aec7-415b-b866-bc493c3a6a8d";
 
 function getToken(): string {
   return localStorage.getItem("ff_session_token") || "";
@@ -120,5 +121,40 @@ export const responsesApi = {
       method: "DELETE",
       headers: authHeaders(),
     });
+  },
+};
+
+// ─── Upload ───────────────────────────────────────────────
+
+export interface UploadResult {
+  ok: boolean;
+  url: string;
+  name: string;
+  size: number;
+  mime_type: string;
+}
+
+export const uploadApi = {
+  async uploadFile(file: File): Promise<UploadResult> {
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const res = await fetch(UPLOAD_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: base64,
+        mime_type: file.type || "application/octet-stream",
+        name: file.name,
+      }),
+    });
+    return parseJson(res);
   },
 };
