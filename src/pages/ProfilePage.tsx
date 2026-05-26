@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import { useYandexAuth } from "@/hooks/useYandexAuth";
+import { useAuth } from "@/context/AuthContext";
 
 const INTEGRATIONS = [
   { name: "Яндекс", icon: "🟡", status: true, desc: "Вход и синхронизация" },
@@ -18,7 +18,7 @@ const PLANS = [
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user: authUser, logout } = useYandexAuth();
+  const { user: authUser, logout } = useAuth();
   const user = authUser ? { name: authUser.name, email: authUser.email, avatar: authUser.avatar_url } : null;
   const onLogin = () => navigate("/login");
   const onLogout = async () => { await logout(); navigate("/login"); };

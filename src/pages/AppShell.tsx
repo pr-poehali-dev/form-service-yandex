@@ -2,12 +2,12 @@ import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import Icon from "@/components/ui/icon";
-import { useYandexAuth } from "@/hooks/useYandexAuth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useYandexAuth();
+  const { user, loading } = useAuth();
 
   // current page key from path
   const path = location.pathname;

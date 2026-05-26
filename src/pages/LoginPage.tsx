@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import { useYandexAuth } from "@/hooks/useYandexAuth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { user, loading, login, loginDubble } = useYandexAuth();
+  const { user, loading, login, loginDubble } = useAuth();
   const [yLoading, setYLoading] = useState(false);
   const [dLoading, setDLoading] = useState(false);
 
