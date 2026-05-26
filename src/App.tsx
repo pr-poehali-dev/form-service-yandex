@@ -12,7 +12,10 @@ import ResponsesPage from "./pages/ResponsesPage";
 import StatsPage from "./pages/StatsPage";
 import ProfilePage from "./pages/ProfilePage";
 import FormPublicPage from "./pages/FormPublicPageRoute";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
 import NotFound from "./pages/NotFound";
+import CookieBanner from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +29,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/forms" replace />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/form/:slug" element={<FormPublicPage />} />
 
             <Route element={<AppShell />}>
@@ -39,6 +44,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useAuth } from "@/context/AuthContext";
 
@@ -85,7 +85,15 @@ export default function LoginPage() {
           <p className="text-xs text-muted-foreground mb-4">для сотрудников экосистемы</p>
 
           <p className="text-xs text-muted-foreground">
-            Ваши данные защищены.
+            Нажимая «Войти», вы соглашаетесь с{" "}
+            <Link to="/terms" className="text-primary/80 hover:text-primary underline">
+              Пользовательским соглашением
+            </Link>{" "}
+            и{" "}
+            <Link to="/privacy" className="text-primary/80 hover:text-primary underline">
+              Политикой конфиденциальности
+            </Link>
+            .
           </p>
         </div>
 
