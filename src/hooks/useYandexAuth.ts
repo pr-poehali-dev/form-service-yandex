@@ -109,13 +109,14 @@ export function useYandexAuth() {
   }, []);
 
   const login = useCallback(async () => {
-    // Получаем client_id с бэкенда чтобы не хранить в коде
     let clientId = "";
+    let redirectUri = "";
     try {
       const res = await fetch(`${AUTH_URL}?action=client_id`);
       const data = await res.json();
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
       clientId = parsed.client_id || "";
+      redirectUri = parsed.redirect_uri || "";
     } catch {
       clientId = "";
     }
@@ -123,8 +124,11 @@ export function useYandexAuth() {
       alert("Яндекс OAuth не настроен. Добавьте YANDEX_CLIENT_ID в секреты проекта.");
       return;
     }
-    const redirectUri = encodeURIComponent(`${window.location.origin}${window.location.pathname}`);
-    window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
+    // Если redirect_uri не задан в env — используем текущий /login
+    if (!redirectUri) {
+      redirectUri = `${window.location.origin}/login`;
+    }
+    window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
   }, []);
 
   const loginDubble = useCallback(() => {

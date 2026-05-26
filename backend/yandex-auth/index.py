@@ -40,16 +40,20 @@ def ensure_tables():
     conn.close()
 
 
-def exchange_code(code: str, redirect_uri: str) -> dict:
+def exchange_code(code: str, redirect_uri: str = "") -> dict:
     client_id = os.environ["YANDEX_CLIENT_ID"]
     client_secret = os.environ["YANDEX_CLIENT_SECRET"]
-    data = urllib.parse.urlencode({
+    # Используем redirect_uri из env (должен совпадать с Яндекс приложением)
+    uri = os.environ.get("YANDEX_REDIRECT_URI", "") or redirect_uri
+    params = {
         "grant_type": "authorization_code",
         "code": code,
         "client_id": client_id,
         "client_secret": client_secret,
-        "redirect_uri": redirect_uri,
-    }).encode()
+    }
+    if uri:
+        params["redirect_uri"] = uri
+    data = urllib.parse.urlencode(params).encode()
     req = urllib.request.Request(
         "https://oauth.yandex.ru/token",
         data=data,
@@ -143,9 +147,12 @@ def handler(event: dict, context) -> dict:
 
     qs = event.get("queryStringParameters") or {}
 
-    # GET ?action=client_id — публичный client_id для OAuth редиректа
+    # GET ?action=client_id — публичный client_id + redirect_uri для OAuth
     if qs.get("action") == "client_id" and method == "GET":
-        return {"statusCode": 200, "headers": CORS, "body": json.dumps({"client_id": os.environ.get("YANDEX_CLIENT_ID", "")})}
+        return {"statusCode": 200, "headers": CORS, "body": json.dumps({
+            "client_id": os.environ.get("YANDEX_CLIENT_ID", ""),
+            "redirect_uri": os.environ.get("YANDEX_REDIRECT_URI", ""),
+        })}
 
     # GET ?action=me — вернуть текущего пользователя по токену
     if qs.get("action") == "me" and method == "GET":
