@@ -136,8 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginDubble = useCallback(() => {
-    const redirectUri = `${window.location.origin}/login`;
-    const url = `https://forms-dubble.ru/id/auth?client_id=${DUBBLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const redirectUri = "https://forms-dubble.ru/forms";
+    const url = `https://dabbles-ecosystem-site--preview.poehali.dev/id/auth?client_id=forms&redirect_uri=${encodeURIComponent(redirectUri)}`;
     window.location.href = url;
   }, []);
 
