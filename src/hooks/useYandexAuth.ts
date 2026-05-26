@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 
 const AUTH_URL = "https://functions.poehali.dev/857f34d4-2daa-4be3-ad3f-52d27fe7d9b1";
+const DUBBLE_AUTH_URL = "https://functions.poehali.dev/c3b43e5e-8db0-48d2-8357-3ee45106dafc";
 const TOKEN_KEY = "ff_session_token";
+
+const DUBBLE_CLIENT_ID = "HFt0WM4u6jOa6a6uowv5TTyZwv5VyKFEbY_sZ8ayca0";
+const DUBBLE_REDIRECT_URI = "https://forms-dubble.ru/";
 
 export interface AuthUser {
   id: number;
@@ -9,6 +13,7 @@ export interface AuthUser {
   email: string;
   avatar_url: string;
   yandex_id: string;
+  dubble_id?: string;
 }
 
 export function useYandexAuth() {
@@ -44,6 +49,29 @@ export function useYandexAuth() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
+    const dubbleToken = params.get("access_token") || params.get("token");
+
+    // Даббл ID callback
+    if (dubbleToken) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      fetch(DUBBLE_AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: dubbleToken }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const parsed = typeof data === "string" ? JSON.parse(data) : data;
+          if (parsed.token && parsed.user) {
+            localStorage.setItem(TOKEN_KEY, parsed.token);
+            setUser(parsed.user);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+      return;
+    }
+
     if (!code) return;
 
     // Убираем code из URL
@@ -86,6 +114,11 @@ export function useYandexAuth() {
     window.location.href = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}`;
   }, []);
 
+  const loginDubble = useCallback(() => {
+    const url = `https://forms-dubble.ru/id/auth?client_id=${DUBBLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(DUBBLE_REDIRECT_URI)}`;
+    window.location.href = url;
+  }, []);
+
   const logout = useCallback(async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
@@ -98,5 +131,5 @@ export function useYandexAuth() {
     setUser(null);
   }, []);
 
-  return { user, loading, login, logout };
+  return { user, loading, login, loginDubble, logout };
 }

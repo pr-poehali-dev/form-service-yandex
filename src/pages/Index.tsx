@@ -15,7 +15,7 @@ export default function Index() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [editingFormId, setEditingFormId] = useState<string | undefined>();
 
-  const { user, loading, login, logout } = useYandexAuth();
+  const { user, loading, login, loginDubble, logout } = useYandexAuth();
   const token = localStorage.getItem("ff_session_token") || "";
 
   // Проверяем публичный маршрут /form/:slug
@@ -123,8 +123,25 @@ export default function Index() {
             />
             <h2 className="text-2xl font-bold text-foreground mb-2">Добро пожаловать в Формус!</h2>
             <p className="text-muted-foreground text-sm mb-8">
-              Войди через Яндекс, чтобы создавать формы и собирать ответы
+              Выберите способ входа
             </p>
+            {/* Даббл ID */}
+            <button
+              onClick={() => loginDubble()}
+              disabled={loginLoading}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-semibold text-white mb-3 hover:opacity-90 transition-all disabled:opacity-70"
+              style={{ background: "linear-gradient(135deg, #1a1a2e, #16213e)", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 0 20px rgba(0,0,0,0.4)" }}
+            >
+              <span className="text-lg font-black leading-none">D</span>
+              Войти через Даббл ID
+            </button>
+            {/* Разделитель */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-xs text-muted-foreground">или</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+            {/* Яндекс */}
             <button
               onClick={handleYandexLogin}
               disabled={loginLoading}
@@ -137,7 +154,7 @@ export default function Index() {
               {loginLoading ? "Перенаправление..." : "Войти через Яндекс"}
             </button>
             <p className="text-xs text-muted-foreground">
-              Официальный Яндекс OAuth. Ваши данные защищены.
+              Ваши данные защищены.
             </p>
             <button
               onClick={() => setShowLoginModal(false)}
