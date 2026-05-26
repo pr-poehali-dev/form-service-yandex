@@ -18,7 +18,16 @@ export interface AuthUser {
 
 export function useYandexAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  // Проверяем заранее — есть ли code/token в URL или токен в storage
+  // Если да — держим loading=true пока не обработаем
+  const hasCode = typeof window !== "undefined" &&
+    (new URLSearchParams(window.location.search).has("code") ||
+     new URLSearchParams(window.location.search).has("access_token") ||
+     new URLSearchParams(window.location.search).has("token"));
+  const hasStoredToken = typeof window !== "undefined" && !!localStorage.getItem(TOKEN_KEY);
+
+  const [loading, setLoading] = useState(hasCode || hasStoredToken);
 
   const fetchMe = useCallback(async (token: string): Promise<AuthUser | null> => {
     try {
@@ -34,6 +43,10 @@ export function useYandexAuth() {
   }, []);
 
   useEffect(() => {
+    // Если в URL есть code/token — не трогаем, второй useEffect разберётся
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("code") || params.has("access_token") || params.has("token")) return;
+
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
       setLoading(false);
@@ -45,7 +58,7 @@ export function useYandexAuth() {
     });
   }, [fetchMe]);
 
-  // После редиректа от Яндекса — обмениваем code на токен
+  // После редиректа от Яндекса/Даббл ID — обмениваем code на токен
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -74,7 +87,7 @@ export function useYandexAuth() {
 
     if (!code) return;
 
-    // Убираем code из URL
+    // Убираем code из URL сразу
     window.history.replaceState({}, document.title, window.location.pathname);
 
     const redirectUri = `${window.location.origin}${window.location.pathname}`;
