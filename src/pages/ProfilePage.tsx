@@ -260,8 +260,8 @@ export default function ProfilePage() {
             <Icon name="ChevronRight" size={16} className="text-foreground/30" />
           </button>
           <button
-            onClick={() => window.open("https://t.me/+QgiLIa1gFRY4Y2Iy", "_blank")}
-            className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/3 transition text-left"
+            disabled
+            className="w-full flex items-center gap-4 px-5 py-4 text-left opacity-40 cursor-not-allowed"
           >
             <Icon name="MessageCircle" size={18} className="text-sky-400" />
             <div className="flex-1">
@@ -271,8 +271,8 @@ export default function ProfilePage() {
             <Icon name="ExternalLink" size={14} className="text-foreground/30" />
           </button>
           <button
-            onClick={() => window.open("https://poehali.dev/help", "_blank")}
-            className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/3 transition text-left"
+            disabled
+            className="w-full flex items-center gap-4 px-5 py-4 text-left opacity-40 cursor-not-allowed"
           >
             <Icon name="HelpCircle" size={18} className="text-amber-400" />
             <div className="flex-1">
