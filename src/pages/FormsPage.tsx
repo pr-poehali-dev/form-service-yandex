@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
+import ShareModal from "@/components/ShareModal";
 import { formsApi, type Form } from "@/lib/api";
 
 const STATUS_CFG = {
@@ -10,12 +12,12 @@ const STATUS_CFG = {
 
 const EMOJIS = ["💬", "📋", "⭐", "🎉", "📊", "🎯", "📝", "🔔"];
 
-interface FormsPageProps {
-  onOpenBuilder: (formId?: string) => void;
-  token: string;
-}
-
-export default function FormsPage({ onOpenBuilder, token }: FormsPageProps) {
+export default function FormsPage() {
+  const navigate = useNavigate();
+  const token = typeof window !== "undefined" ? localStorage.getItem("ff_session_token") || "" : "";
+  const onOpenBuilder = (formId?: string) => {
+    navigate(formId ? `/builder/${formId}` : "/builder");
+  };
   const [forms, setForms] = useState<Form[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -24,6 +26,7 @@ export default function FormsPage({ onOpenBuilder, token }: FormsPageProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [shareForm, setShareForm] = useState<Form | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -55,6 +58,7 @@ export default function FormsPage({ onOpenBuilder, token }: FormsPageProps) {
   };
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm("Удалить форму? Это действие необратимо.")) return;
     setDeleting(id);
     try {
       await formsApi.delete(id);
@@ -81,8 +85,13 @@ export default function FormsPage({ onOpenBuilder, token }: FormsPageProps) {
 
   const handlePublish = async (form: Form) => {
     await formsApi.update({ id: form.id, status: "active" });
-    setForms(prev => prev.map(f => f.id === form.id ? { ...f, status: "active" } : f));
-    showToast("Форма опубликована!");
+    const updated = { ...form, status: "active" as const };
+    setForms(prev => prev.map(f => f.id === form.id ? updated : f));
+    setShareForm(updated);
+  };
+
+  const handleShare = (form: Form) => {
+    setShareForm(form);
   };
 
   const filtered = forms.filter(f => {
@@ -249,6 +258,15 @@ export default function FormsPage({ onOpenBuilder, token }: FormsPageProps) {
                       <Icon name={form.status === "active" ? "Pause" : "Play"} size={13} />
                     </button>
 
+                    {/* Поделиться (QR + ссылка) */}
+                    <button
+                      onClick={() => handleShare(form)}
+                      className="flex items-center justify-center px-3 py-2 rounded-xl text-xs font-medium transition glass text-foreground/50 hover:text-foreground"
+                      title="Поделиться формой"
+                    >
+                      <Icon name="Share2" size={13} />
+                    </button>
+
                     {/* Копировать ссылку */}
                     <button
                       onClick={() => handleCopyLink(form)}
@@ -288,6 +306,13 @@ export default function FormsPage({ onOpenBuilder, token }: FormsPageProps) {
           </button>
         </div>
       )}
+
+      <ShareModal
+        open={!!shareForm}
+        url={shareForm ? formsApi.publicUrl(shareForm.slug) : ""}
+        title={shareForm?.title}
+        onClose={() => setShareForm(null)}
+      />
     </div>
   );
 }

@@ -2,11 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import Icon from "@/components/ui/icon";
 import { formsApi, responsesApi, type Form, type FormResponse } from "@/lib/api";
 
-interface ResponsesPageProps {
-  token: string;
-}
-
-export default function ResponsesPage({ token }: ResponsesPageProps) {
+export default function ResponsesPage() {
+  const token = typeof window !== "undefined" ? localStorage.getItem("ff_session_token") || "" : "";
   const [forms, setForms] = useState<Form[]>([]);
   const [selectedFormId, setSelectedFormId] = useState<string>("");
   const [responses, setResponses] = useState<FormResponse[]>([]);

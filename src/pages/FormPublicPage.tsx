@@ -29,11 +29,19 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
   const validate = (fields: FormField[]) => {
     const errs: Record<string, string> = {};
     fields.forEach(f => {
-      if (f.required && !values[f.id]?.trim()) {
-        errs[f.id] = "Обязательное поле";
+      if (f.type === "section") return;
+      const v = (values[f.id] || "").toString().trim();
+      if (f.required && !v) {
+        errs[f.id] = f.type === "consent" ? "Нужно подтвердить согласие" : "Обязательное поле";
       }
-      if (f.type === "email" && values[f.id] && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values[f.id])) {
+      if (f.type === "email" && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
         errs[f.id] = "Некорректный email";
+      }
+      if (f.type === "url" && v && !/^https?:\/\/.+/.test(v)) {
+        errs[f.id] = "Ссылка должна начинаться с http:// или https://";
+      }
+      if (f.type === "consent" && f.required && v !== "true") {
+        errs[f.id] = "Нужно подтвердить согласие";
       }
     });
     return errs;
@@ -48,7 +56,10 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
 
     setSubmitting(true);
     const data: Record<string, string> = {};
-    fields.forEach(f => { data[f.label] = values[f.id] || ""; });
+    fields.forEach(f => {
+      if (f.type === "section") return;
+      data[f.label] = values[f.id] || "";
+    });
     const emailField = fields.find(f => f.type === "email");
     const nameField = fields.find(f => f.type === "text" && f.label.toLowerCase().includes("им"));
     const email = emailField ? values[emailField.id] : "";
@@ -127,9 +138,133 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
             ))}
           </div>
         );
+      case "nps":
+        return (
+          <div className="grid grid-cols-11 gap-1.5">
+            {[0,1,2,3,4,5,6,7,8,9,10].map(n => (
+              <button key={n} type="button" onClick={() => setValue(field.id, String(n))}
+                className={`aspect-square rounded-lg text-xs font-semibold transition ${
+                  String(n) === val
+                    ? "bg-primary text-white border border-primary"
+                    : "glass text-foreground/60 hover:text-foreground hover:border-primary/40"
+                }`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        );
+      case "scale":
+        return (
+          <div className="flex items-center gap-2">
+            {[1,2,3,4,5].map(n => (
+              <button key={n} type="button" onClick={() => setValue(field.id, String(n))}
+                className={`flex-1 py-2 rounded-lg text-sm transition ${
+                  String(n) === val
+                    ? "bg-primary text-white border border-primary"
+                    : "glass text-foreground/60 hover:text-foreground hover:border-primary/40"
+                }`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        );
+      case "emoji": {
+        const emojiOptions = field.options && field.options.length > 0 ? field.options : ["😡","😕","😐","🙂","😍"];
+        return (
+          <div className="flex items-center gap-3">
+            {emojiOptions.map(e => (
+              <button key={e} type="button" onClick={() => setValue(field.id, e)}
+                className={`text-3xl transition ${val === e ? "opacity-100 scale-110" : "opacity-50 hover:opacity-100 hover:scale-110"}`}>
+                {e}
+              </button>
+            ))}
+          </div>
+        );
+      }
+      case "yesno": {
+        const yesNoOptions = field.options && field.options.length > 0 ? field.options : ["Да","Нет"];
+        return (
+          <div className="flex gap-2">
+            {yesNoOptions.map(o => (
+              <button key={o} type="button" onClick={() => setValue(field.id, o)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition ${
+                  val === o
+                    ? "bg-primary text-white border border-primary"
+                    : "glass text-foreground/60 hover:text-foreground"
+                }`}>
+                {o}
+              </button>
+            ))}
+          </div>
+        );
+      }
+      case "file":
+        return (
+          <label className={`${base} ${errCls} flex items-center justify-center gap-2 py-5 cursor-pointer hover:border-primary/40 transition`} style={inputStyle}>
+            <Icon name="Upload" size={16} />
+            <span className="text-sm">{val ? val : "Выбрать файл"}</span>
+            <input type="file" className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) setValue(field.id, f.name);
+              }}
+            />
+          </label>
+        );
+      case "signature":
+        return (
+          <div className="rounded-xl border-dashed flex items-center justify-center h-28 text-muted-foreground text-sm" style={inputStyle}>
+            <input
+              className="w-full h-full bg-transparent text-center focus:outline-none italic"
+              style={{ fontFamily: "'Brush Script MT', cursive" }}
+              placeholder="Подпишите здесь..."
+              value={val}
+              onChange={e => setValue(field.id, e.target.value)}
+            />
+          </div>
+        );
+      case "address": {
+        const parts = val ? val.split(" | ") : ["", ""];
+        const updatePart = (idx: number, v: string) => {
+          const arr = [...parts];
+          arr[idx] = v;
+          setValue(field.id, arr.join(" | "));
+        };
+        return (
+          <div className="space-y-2">
+            <input className={`${base} ${errCls}`} style={inputStyle} value={parts[0] || ""} onChange={e => updatePart(0, e.target.value)} placeholder="Город" />
+            <input className={`${base} ${errCls}`} style={inputStyle} value={parts[1] || ""} onChange={e => updatePart(1, e.target.value)} placeholder="Улица, дом, квартира" />
+          </div>
+        );
+      }
+      case "color":
+        return (
+          <div className="flex items-center gap-3">
+            <input type="color" value={val || "#fc3f1d"} onChange={e => setValue(field.id, e.target.value)}
+              className="w-14 h-10 rounded-lg cursor-pointer bg-transparent border border-white/15" />
+            <span className="text-sm text-muted-foreground">{val || "не выбрано"}</span>
+          </div>
+        );
+      case "consent":
+        return (
+          <label className="flex items-start gap-3 cursor-pointer" onClick={() => setValue(field.id, val === "true" ? "" : "true")}>
+            <div className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition ${val === "true" ? "border-primary bg-primary" : "border-white/25"}`}>
+              {val === "true" && <Icon name="Check" size={10} className="text-white" />}
+            </div>
+            <span className="text-sm text-foreground">{field.placeholder || "Согласен"}</span>
+          </label>
+        );
+      case "section":
+        return null;
       case "date":
         return <input type="date" className={`${base} ${errCls}`} style={inputStyle} value={val}
           onChange={e => setValue(field.id, e.target.value)} />;
+      case "time":
+        return <input type="time" className={`${base} ${errCls}`} style={inputStyle} value={val}
+          onChange={e => setValue(field.id, e.target.value)} />;
+      case "url":
+        return <input type="url" className={`${base} ${errCls}`} style={inputStyle} value={val}
+          onChange={e => setValue(field.id, e.target.value)} placeholder={field.placeholder || "https://"} />;
       default:
         return <input
           type={field.type === "phone" ? "tel" : field.type === "number" ? "number" : field.type === "email" ? "email" : "text"}
@@ -193,21 +328,44 @@ export default function FormPublicPage({ slug }: FormPublicPageProps) {
               {form.description && <p className="text-sm text-muted-foreground mt-2">{form.description}</p>}
             </div>
 
-            {(form.fields as FormField[] || []).map(field => (
-              <div key={field.id}>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  {field.label}
-                  {field.required && <span className="text-primary ml-1">*</span>}
-                </label>
-                {renderField(field)}
-                {errors[field.id] && (
-                  <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
-                    <Icon name="AlertCircle" size={12} />
-                    {errors[field.id]}
-                  </p>
-                )}
-              </div>
-            ))}
+            {(form.fields as FormField[] || []).map(field => {
+              if (field.type === "section") {
+                return (
+                  <div key={field.id} className="pt-3 border-l-2 border-primary/40 pl-3">
+                    <h3 className="text-base font-semibold text-foreground">{field.label}</h3>
+                    {field.placeholder && <p className="text-xs text-muted-foreground mt-0.5">{field.placeholder}</p>}
+                  </div>
+                );
+              }
+              if (field.type === "consent") {
+                return (
+                  <div key={field.id}>
+                    {renderField(field)}
+                    {errors[field.id] && (
+                      <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                        <Icon name="AlertCircle" size={12} />
+                        {errors[field.id]}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <div key={field.id}>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {field.label}
+                    {field.required && <span className="text-primary ml-1">*</span>}
+                  </label>
+                  {renderField(field)}
+                  {errors[field.id] && (
+                    <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+                      <Icon name="AlertCircle" size={12} />
+                      {errors[field.id]}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
 
             <button
               type="submit"
