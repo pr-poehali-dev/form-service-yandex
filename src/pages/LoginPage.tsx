@@ -54,15 +54,15 @@ export default function LoginPage() {
           </p>
 
           <button
-            onClick={handleDubble}
-            disabled={dLoading || yLoading}
+            onClick={handleYandex}
+            disabled={yLoading || dLoading}
             className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-semibold text-white mb-3 hover:opacity-90 transition-all disabled:opacity-70"
-            style={{ background: "linear-gradient(135deg, #1a1a2e, #16213e)", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 0 20px rgba(0,0,0,0.4)" }}
+            style={{ background: "linear-gradient(135deg, #fc3f1d, #ff6534)", boxShadow: "0 0 24px rgba(252,63,29,0.4)" }}
           >
-            {dLoading
-              ? <Icon name="Loader2" size={18} className="animate-spin" />
-              : <span className="text-lg font-black leading-none">D</span>}
-            {dLoading ? "Перенаправление..." : "Войти через Даббл ID"}
+            {yLoading
+              ? <Icon name="Loader2" size={20} className="animate-spin" />
+              : null}
+            {yLoading ? "Перенаправление..." : "Войти через Яндекс"}
           </button>
 
           <div className="flex items-center gap-3 mb-3">
@@ -72,16 +72,17 @@ export default function LoginPage() {
           </div>
 
           <button
-            onClick={handleYandex}
-            disabled={yLoading || dLoading}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-semibold text-white mb-4 hover:opacity-90 transition-all disabled:opacity-70"
-            style={{ background: "linear-gradient(135deg, #fc3f1d, #ff6534)", boxShadow: "0 0 24px rgba(252,63,29,0.4)" }}
+            onClick={handleDubble}
+            disabled={dLoading || yLoading}
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-base font-semibold text-white mb-1 hover:opacity-90 transition-all disabled:opacity-70"
+            style={{ background: "linear-gradient(135deg, #1a1a2e, #16213e)", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 0 20px rgba(0,0,0,0.4)" }}
           >
-            {yLoading
-              ? <Icon name="Loader2" size={20} className="animate-spin" />
-              : <span className="text-2xl font-black leading-none">Я</span>}
-            {yLoading ? "Перенаправление..." : "Войти через Яндекс"}
+            {dLoading
+              ? <Icon name="Loader2" size={18} className="animate-spin" />
+              : null}
+            {dLoading ? "Перенаправление..." : "Войти через Даббл ID"}
           </button>
+          <p className="text-xs text-muted-foreground mb-4">для сотрудников экосистемы</p>
 
           <p className="text-xs text-muted-foreground">
             Ваши данные защищены.
